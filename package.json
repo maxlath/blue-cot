@@ -8,6 +8,9 @@
     "promises",
     "bluebird"
   ],
+  "scripts": {
+    "test": "mocha"
+  },
   "version": "0.0.6",
   "main": "cot",
   "dependencies": {
@@ -24,5 +27,9 @@
   "repository": {
     "type": "git",
     "url": "http://github.com/willconant/cot-node"
+  },
+  "devDependencies": {
+    "chai": "^1.9.2",
+    "mocha": "^2.0.1"
   }
 }

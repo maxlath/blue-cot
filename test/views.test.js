@@ -2,12 +2,12 @@ var chai = require('chai');
 var expect = chai.expect;
 var Cot = require('../cot');
 var config = require('./config');
-var Q = require('q');
+var Promise = require('bluebird');
 
-describe('DbHandle', function() {	
+describe('DbHandle', function() {
 	var cot = new Cot(config.serverOpts);
 	var db = cot.db(config.dbName);
-	
+
 	beforeEach(function(done) {
 		cot.jsonRequest('DELETE', '/' + config.dbName)
 		.then(function() {
@@ -18,19 +18,19 @@ describe('DbHandle', function() {
 			for (var i = 1; i < 10; i++) {
 				docPromises.push(db.post({_id: 'doc-' + i, key: 'key-' + i}));
 			}
-			
+
 			var designDoc = {_id: '_design/test', views: {
 				testView: {
 					map: 'function(d) { emit(d.key, null); emit("z", null); }'
-				}				
+				}
 			}};
 			docPromises.push(db.post(designDoc));
-			
-			return Q.all(docPromises);
+
+			return Promise.all(docPromises);
 		})
 		.nodeify(done);
 	});
-	
+
 	describe('#view', function() {
 		it('should return doc-3 thru doc-6 using startkey_docid and endkey_docid', function(done) {
 			db.view('test', 'testView', {key: 'z', startkey_docid: 'doc-3', endkey_docid: 'doc-6'})

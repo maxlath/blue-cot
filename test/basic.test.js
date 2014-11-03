@@ -16,10 +16,10 @@ describe('Cot', function() {
 	});
 });
 
-describe('DbHandle', function() {	
+describe('DbHandle', function() {
 	var cot = new Cot(config.serverOpts);
 	var db = cot.db(config.dbName);
-	
+
 	beforeEach(function(done) {
 		cot.jsonRequest('DELETE', '/' + config.dbName)
 		.then(function() {
@@ -37,19 +37,19 @@ describe('DbHandle', function() {
 		})
 		.nodeify(done);
 	});
-	
+
 	describe('#docUrl', function() {
 		it('should encode doc ids', function() {
 			var encoded = db.docUrl('foo/bar');
 			expect(encoded).to.equal('/test-cot-node/foo%2Fbar');
 		});
-	
+
 		it('should not encode first slash in design doc ids', function() {
 			var encoded = db.docUrl('_design/foo/bar');
 			expect(encoded).to.equal('/test-cot-node/_design/foo%2Fbar');
 		});
 	});
-	
+
 	describe('#info', function() {
 		it('should return database info', function(done) {
 			db.info()
@@ -60,7 +60,7 @@ describe('DbHandle', function() {
 			.nodeify(done);
 		});
 	});
-	
+
 	describe('#get', function() {
 		it('should return test document from database', function(done) {
 			db.get('person-1')
@@ -71,7 +71,7 @@ describe('DbHandle', function() {
 			.nodeify(done);
 		});
 	});
-	
+
 	describe('#view', function() {
 		it('should return a single row', function(done) {
 			db.view('test', 'testView', {})
@@ -84,7 +84,7 @@ describe('DbHandle', function() {
 			.nodeify(done);
 		});
 	});
-	
+
 	describe('#put', function() {
 		it('should treat conflicts as expected', function(done) {
 			var doc = {_id: 'put-test'};
@@ -98,7 +98,7 @@ describe('DbHandle', function() {
 			.nodeify(done);
 		});
 	});
-	
+
 	describe('#post', function() {
 		it('should treat conflicts as errors', function(done) {
 			var doc = {_id: 'post-test'};
@@ -109,13 +109,13 @@ describe('DbHandle', function() {
 			.then(function(response) {
 				done(new Error('should not have resolved'));
 			})
-			.fail(function() {
+			.catch(function() {
 				done();
 			})
 			.done();
 		});
 	});
-	
+
 	describe('#batch', function() {
 		it('should ignore conflicts', function(done) {
 			var doc = {_id: 'batch-test'};
@@ -135,7 +135,7 @@ describe('DbHandle', function() {
 			.nodeify(done);
 		});
 	});
-	
+
 	describe('#exists', function() {
 		it('should return null for nonexistent doc', function(done) {
 			db.exists('does-not-exist')
