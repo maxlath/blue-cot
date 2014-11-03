@@ -23,7 +23,7 @@ THE SOFTWARE.
 'use strict';
 
 var querystring = require('querystring');
-var Q = require('q');
+var Promise = require('bluebird');
 
 module.exports = Cot;
 
@@ -50,15 +50,15 @@ function Cot(opts) {
 
 Cot.prototype = {
 	jsonRequest: function(method, path, body) {
-		var deferred = Q.defer();
-		
+		var deferred = Promise.defer();
+
 		var headers = {};
 		headers['accept'] = 'application/json';
 		headers['host'] = this.hostHeader;
 		if (body) {
 			headers['content-type'] = 'application/json';
 		}
-				
+
 		var request = this.http.request({
 			hostname: this.hostname,
 			port: this.port,
@@ -67,25 +67,25 @@ Cot.prototype = {
 			method: method,
 			headers: headers
 		});
-		
+
 		request.on('error', deferred.reject.bind(deferred));
-		
+
 		request.on('response', function(response) {
 			response.setEncoding('utf8');
-			
+
 			var buffer = '';
 			response.on('data', function(data) {
 				buffer += data;
 			});
-			
+
 			response.on('error', deferred.reject.bind(deferred));
-			
+
 			response.on('end', function() {
 				var myResponse = {
 					statusCode: response.statusCode,
 					unparsedBody: buffer
 				};
-				
+
 				if (response.headers['content-type'] === 'application/json') {
 					try {
 						myResponse.body = JSON.parse(buffer);
@@ -94,20 +94,20 @@ Cot.prototype = {
 						return;
 					}
 				}
-				
+
 				deferred.resolve(myResponse);
 			});
 		});
-		
+
 		if (body) {
 			request.end(JSON.stringify(body));
 		} else {
 			request.end();
 		}
-		
+
 		return deferred.promise;
 	},
-	
+
 	db: function(name) {
 		return new DbHandle(this, name);
 	}
@@ -123,14 +123,14 @@ DbHandle.prototype = {
 		if (typeof docId !== 'string' || docId.length === 0) {
 			throw new TypeError('doc id must be a non-empty string');
 		}
-		
+
 		if (docId.indexOf('_design/') === 0) {
 			return '/' + this.name + '/_design/' + encodeURIComponent(docId.substr(8));
 		} else {
 			return '/' + this.name + '/' + encodeURIComponent(docId);
 		}
 	},
-	
+
 	info: function() {
 		return this.cot.jsonRequest('GET', '/' + this.name)
 		.then(function(response) {
@@ -148,7 +148,7 @@ DbHandle.prototype = {
 			}
 		});
 	},
-	
+
 	exists: function(docId) {
 		return this.cot.jsonRequest('GET', this.docUrl(docId))
 		.then(function(response) {
@@ -161,8 +161,8 @@ DbHandle.prototype = {
 			}
 		});
 	},
-	
-	put: function(doc) {		
+
+	put: function(doc) {
 		return this.cot.jsonRequest('PUT', this.docUrl(doc._id), doc)
 		.then(function(response) {
 			if (response.statusCode === 201 || response.statusCode === 409) {
@@ -172,7 +172,7 @@ DbHandle.prototype = {
 			}
 		});
 	},
-	
+
 	post: function(doc) {
 		return this.cot.jsonRequest('POST', '/' + this.name, doc)
 		.then(function(response) {
@@ -185,7 +185,7 @@ DbHandle.prototype = {
 			}
 		});
 	},
-	
+
 	batch: function(doc) {
 		return this.cot.jsonRequest('POST', '/' + this.name + '?batch=ok', doc)
 		.then(function(response) {
@@ -198,12 +198,12 @@ DbHandle.prototype = {
 			}
 		});
 	},
-	
+
 	update: function(docId, fn) {
 		var db = this;
-		
+
 		return tryIt();
-	
+
 		function tryIt() {
 			return db.exists(docId)
 			.then(function(doc) {
@@ -221,10 +221,10 @@ DbHandle.prototype = {
 			});
 		}
 	},
-	
+
 	delete: function(docId, rev) {
 		var url = this.docUrl(docId) + '?rev=' + encodeURIComponent(rev);
-		
+
 		return this.cot.jsonRequest('DELETE', url)
 		.then(function(response) {
 			if (response.statusCode === 200) {
@@ -234,7 +234,7 @@ DbHandle.prototype = {
 			}
 		});
 	},
-	
+
 	bulk: function(docs) {
 		var url = '/' + this.name + '/_bulk_docs';
 		return this.cot.jsonRequest('POST', url, {docs: docs})
@@ -246,8 +246,8 @@ DbHandle.prototype = {
 			}
 		});
 	},
-	
-	viewQuery: function(path, query) {	
+
+	viewQuery: function(path, query) {
 		query = query || {};
 		var url = '/' + this.name + '/' + path;
 		var q = {};
@@ -260,7 +260,7 @@ DbHandle.prototype = {
 				}
 			}
 		});
-		
+
 		return this.cot.jsonRequest('GET', url + '?' + querystring.stringify(q))
 		.then(function(response) {
 			if (response.statusCode !== 200) {
@@ -270,15 +270,15 @@ DbHandle.prototype = {
 			}
 		});
 	},
-	
+
 	view: function(designName, viewName, query) {
 		return this.viewQuery('_design/' + designName + '/_view/' + viewName, query);
 	},
-	
+
 	allDocs: function(query) {
 		return this.viewQuery('_all_docs', query);
 	},
-	
+
 	viewKeysQuery: function(path, keys) {
 		var url = '/' + this.name + '/' + path;
 		return this.cot.jsonRequest('POST', url, {keys: keys})
@@ -290,16 +290,16 @@ DbHandle.prototype = {
 			}
 		});
 	},
-	
+
 	viewKeys: function(designName, viewName, keys) {
 		return this.viewKeysQuery('_design/' + designName + '/_view/' + viewName, keys);
 	},
-	
+
 	allDocsKeys: function(keys) {
 		return this.viewKeysQuery('_all_docs', keys);
 	},
-	
-	changes: function(query) {	
+
+	changes: function(query) {
 		query = query || {};
 		var q = {};
 		changesQueryKeys.forEach(function (key) {
@@ -307,7 +307,7 @@ DbHandle.prototype = {
 				q[key] = JSON.stringify(query[key]);
 			}
 		});
-		
+
 		if (query.longpoll === true) {
 			q.feed = 'longpoll';
 		}
