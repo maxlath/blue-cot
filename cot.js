@@ -250,7 +250,9 @@
       var qs, url;
       qs = this.buildQueryString(query);
       url = "/" + this.name + "/" + path + "?" + qs;
-      return this.cot.jsonRequest('POST', url, keys).then(function(response) {
+      return this.cot.jsonRequest('POST', url, {
+        keys: keys
+      }).then(function(response) {
         var err;
         if (response.statusCode !== 200) {
           err = "error reading view " + path + ": " + response.unparsedBody;

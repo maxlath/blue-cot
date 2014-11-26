@@ -238,7 +238,7 @@ DbHandle:: =
   viewKeysQuery: (path, keys, query) ->
     qs = @buildQueryString query
     url = "/#{@name}/#{path}?#{qs}"
-    @cot.jsonRequest 'POST', url, keys
+    @cot.jsonRequest 'POST', url, {keys: keys}
     .then (response) ->
       if response.statusCode isnt 200
         err = "error reading view #{path}: #{response.unparsedBody}"
