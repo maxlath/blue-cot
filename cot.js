@@ -243,12 +243,12 @@
     allDocs: function(query) {
       return this.viewQuery('_all_docs', query);
     },
-    viewKeysQuery: function(path, keys) {
+    viewKeysQuery: function(path, keys, params) {
       var url;
+      params || (params =  new(Object));
+      params.keys = keys;
       url = "/" + this.name + "/" + path;
-      return this.cot.jsonRequest('POST', url, {
-        keys: keys
-      }).then(function(response) {
+      return this.cot.jsonRequest('POST', url, params).then(function(response) {
         var err;
         if (response.statusCode !== 200) {
           err = "error reading view " + path + ": " + response.unparsedBody;
@@ -258,13 +258,13 @@
         }
       });
     },
-    viewKeys: function(designName, viewName, keys) {
+    viewKeys: function(designName, viewName, keys, params) {
       var path;
       path = "_design/" + designName + "/_view/" + viewName;
-      return this.viewKeysQuery(path, keys);
+      return this.viewKeysQuery(path, keys, params);
     },
-    allDocsKeys: function(keys) {
-      return this.viewKeysQuery('_all_docs', keys);
+    allDocsKeys: function(keys, params) {
+      return this.viewKeysQuery('_all_docs', keys, params);
     },
     changes: function(query) {
       var path, q, qs;

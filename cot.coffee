@@ -236,9 +236,11 @@ DbHandle:: =
   allDocs: (query) ->
     @viewQuery '_all_docs', query
 
-  viewKeysQuery: (path, keys) ->
+  viewKeysQuery: (path, keys, params) ->
+    params ||= new Object
+    params.keys = keys
     url = "/#{@name}/#{path}"
-    @cot.jsonRequest 'POST', url, {keys: keys}
+    @cot.jsonRequest 'POST', url, params
     .then (response) ->
       if response.statusCode isnt 200
         err = "error reading view #{path}: #{response.unparsedBody}"
@@ -246,12 +248,12 @@ DbHandle:: =
       else response.body
 
 
-  viewKeys: (designName, viewName, keys) ->
+  viewKeys: (designName, viewName, keys, params) ->
     path = "_design/#{designName}/_view/#{viewName}"
-    @viewKeysQuery path, keys
+    @viewKeysQuery path, keys, params
 
-  allDocsKeys: (keys) ->
-    @viewKeysQuery '_all_docs', keys
+  allDocsKeys: (keys, params) ->
+    @viewKeysQuery '_all_docs', keys, params
 
   changes: (query) ->
     query ||= {}
