@@ -211,23 +211,26 @@
         }
       });
     },
-    viewQuery: function(path, query) {
-      var q, qs, url;
-      query = query || {};
-      url = "/" + this.name + "/" + path;
+    buildQueryString: function(query) {
+      var q;
+      query || (query = {});
       q = {};
       viewQueryKeys.forEach(function(key) {
-        if (typeof query[key] !== 'undefined') {
+        if (query[key] != null) {
           if (key === 'startkey_docid' || key === 'endkey_docid') {
-            q[key] = query[key];
+            return q[key] = query[key];
           } else {
-            q[key] = JSON.stringify(query[key]);
+            return q[key] = JSON.stringify(query[key]);
           }
         }
       });
-      qs = querystring.stringify(q);
-      path = "" + url + "?" + qs;
-      return this.cot.jsonRequest('GET', path).then(function(response) {
+      return querystring.stringify(q);
+    },
+    viewQuery: function(path, query) {
+      var qs, url;
+      qs = this.buildQueryString(query);
+      url = "/" + this.name + "/" + path + "?" + qs;
+      return this.cot.jsonRequest('GET', url).then(function(response) {
         var err;
         if (response.statusCode !== 200) {
           err = "error reading view " + path + ": " + response.unparsedBody;
@@ -243,12 +246,11 @@
     allDocs: function(query) {
       return this.viewQuery('_all_docs', query);
     },
-    viewKeysQuery: function(path, keys, params) {
-      var url;
-      params || (params =  new(Object));
-      params.keys = keys;
-      url = "/" + this.name + "/" + path;
-      return this.cot.jsonRequest('POST', url, params).then(function(response) {
+    viewKeysQuery: function(path, keys, query) {
+      var qs, url;
+      qs = this.buildQueryString(query);
+      url = "/" + this.name + "/" + path + "?" + qs;
+      return this.cot.jsonRequest('POST', url, keys).then(function(response) {
         var err;
         if (response.statusCode !== 200) {
           err = "error reading view " + path + ": " + response.unparsedBody;
@@ -258,13 +260,13 @@
         }
       });
     },
-    viewKeys: function(designName, viewName, keys, params) {
+    viewKeys: function(designName, viewName, keys, query) {
       var path;
       path = "_design/" + designName + "/_view/" + viewName;
-      return this.viewKeysQuery(path, keys, params);
+      return this.viewKeysQuery(path, keys, query);
     },
-    allDocsKeys: function(keys, params) {
-      return this.viewKeysQuery('_all_docs', keys, params);
+    allDocsKeys: function(keys, query) {
+      return this.viewKeysQuery('_all_docs', keys, query);
     },
     changes: function(query) {
       var path, q, qs;

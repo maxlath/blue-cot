@@ -207,22 +207,21 @@ DbHandle:: =
         throw new Error "error posting to _bulk_docs: #{response.unparsedBody}"
       else response.body
 
-
-  viewQuery: (path, query) ->
-    query = query or {}
-    url = "/#{@name}/#{path}"
+  buildQueryString: (query)->
+    query ||= {}
     q = {}
     viewQueryKeys.forEach (key) ->
-      if typeof query[key] isnt 'undefined'
+      if query[key]?
         if key is 'startkey_docid' or key is 'endkey_docid'
           q[key] = query[key]
         else
           q[key] = JSON.stringify(query[key])
-      return
+    return querystring.stringify(q)
 
-    qs = querystring.stringify(q)
-    path = "#{url}?#{qs}"
-    @cot.jsonRequest 'GET', path
+  viewQuery: (path, query) ->
+    qs = @buildQueryString query
+    url = "/#{@name}/#{path}?#{qs}"
+    @cot.jsonRequest 'GET', url
     .then (response) ->
       if response.statusCode isnt 200
         err = "error reading view #{path}: #{response.unparsedBody}"
@@ -236,11 +235,10 @@ DbHandle:: =
   allDocs: (query) ->
     @viewQuery '_all_docs', query
 
-  viewKeysQuery: (path, keys, params) ->
-    params ||= new Object
-    params.keys = keys
-    url = "/#{@name}/#{path}"
-    @cot.jsonRequest 'POST', url, params
+  viewKeysQuery: (path, keys, query) ->
+    qs = @buildQueryString query
+    url = "/#{@name}/#{path}?#{qs}"
+    @cot.jsonRequest 'POST', url, keys
     .then (response) ->
       if response.statusCode isnt 200
         err = "error reading view #{path}: #{response.unparsedBody}"
@@ -248,12 +246,12 @@ DbHandle:: =
       else response.body
 
 
-  viewKeys: (designName, viewName, keys, params) ->
+  viewKeys: (designName, viewName, keys, query) ->
     path = "_design/#{designName}/_view/#{viewName}"
-    @viewKeysQuery path, keys, params
+    @viewKeysQuery path, keys, query
 
-  allDocsKeys: (keys, params) ->
-    @viewKeysQuery '_all_docs', keys, params
+  allDocsKeys: (keys, query) ->
+    @viewKeysQuery '_all_docs', keys, query
 
   changes: (query) ->
     query ||= {}
