@@ -148,7 +148,7 @@ DbHandle:: =
   put: (doc) ->
     @cot.jsonRequest 'PUT', @docUrl(doc._id), doc
     .then (response) ->
-      if response.statusCode is 201 or response.statusCode is 409
+      if response.statusCode in [ 200, 201, 409 ]
         response.body
       else
         err = "error putting doc #{doc._id}: #{response.unparsedBody}"
