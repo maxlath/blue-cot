@@ -86,10 +86,10 @@
     }
   };
 
-  throwformattedErr = function(response, message) {
+  throwformattedErr = function(res, message) {
     var err;
     err = new Error(message);
-    err.status = response.statusCode;
+    err.status = res.statusCode;
     throw err;
   };
 
@@ -105,61 +105,61 @@
       }
     },
     info: function() {
-      return this.cot.jsonRequest('GET', "/" + this.name).then(function(response) {
-        return response.body;
+      return this.cot.jsonRequest('GET', "/" + this.name).then(function(res) {
+        return res.body;
       });
     },
     get: function(docId) {
-      return this.cot.jsonRequest('GET', this.docUrl(docId)).then(function(response) {
-        if (response.statusCode !== 200) {
-          return throwformattedErr(response, "error getting doc " + docId + ": " + response.unparsedBody);
+      return this.cot.jsonRequest('GET', this.docUrl(docId)).then(function(res) {
+        if (res.statusCode !== 200) {
+          return throwformattedErr(res, "error getting doc " + docId + ": " + res.unparsedBody);
         } else {
-          return response.body;
+          return res.body;
         }
       });
     },
     exists: function(docId) {
-      return this.cot.jsonRequest('GET', this.docUrl(docId)).then(function(response) {
-        if (response.statusCode === 404) {
+      return this.cot.jsonRequest('GET', this.docUrl(docId)).then(function(res) {
+        if (res.statusCode === 404) {
           return null;
-        } else if (response.statusCode !== 200) {
-          return throwformattedErr(response, "error getting doc " + docId + ": " + response.unparsedBody);
+        } else if (res.statusCode !== 200) {
+          return throwformattedErr(res, "error getting doc " + docId + ": " + res.unparsedBody);
         } else {
-          return response.body;
+          return res.body;
         }
       });
     },
     put: function(doc) {
-      return this.cot.jsonRequest('PUT', this.docUrl(doc._id), doc).then(function(response) {
+      return this.cot.jsonRequest('PUT', this.docUrl(doc._id), doc).then(function(res) {
         var ref;
-        if ((ref = response.statusCode) === 200 || ref === 201 || ref === 409) {
-          return response.body;
+        if ((ref = res.statusCode) === 200 || ref === 201 || ref === 409) {
+          return res.body;
         } else {
-          return throwformattedErr(response, "error putting doc " + doc._id + ": " + response.unparsedBody);
+          return throwformattedErr(res, "error putting doc " + doc._id + ": " + res.unparsedBody);
         }
       });
     },
     post: function(doc) {
-      return this.cot.jsonRequest('POST', "/" + this.name, doc).then(function(response) {
-        if (response.statusCode === 201) {
-          return response.body;
+      return this.cot.jsonRequest('POST', "/" + this.name, doc).then(function(res) {
+        if (res.statusCode === 201) {
+          return res.body;
         } else if (doc._id) {
-          return throwformattedErr(response, "error posting doc " + doc._id + ": " + response.unparsedBody);
+          return throwformattedErr(res, "error posting doc " + doc._id + ": " + res.unparsedBody);
         } else {
-          return throwformattedErr(response, "error posting new doc: " + response.unparsedBody);
+          return throwformattedErr(res, "error posting new doc: " + res.unparsedBody);
         }
       });
     },
     batch: function(doc) {
       var path;
       path = "/" + this.name + "?batch=ok";
-      return this.cot.jsonRequest('POST', path, doc).then(function(response) {
-        if (response.statusCode === 202) {
-          return response.body;
+      return this.cot.jsonRequest('POST', path, doc).then(function(res) {
+        if (res.statusCode === 202) {
+          return res.body;
         } else if (doc._id) {
-          return throwformattedErr(response, "error batch posting doc " + doc._id + ": " + response.unparsedBody);
+          return throwformattedErr(res, "error batch posting doc " + doc._id + ": " + res.unparsedBody);
         } else {
-          return throwformattedErr(response, "error batch posting new doc: " + response.unparsedBody);
+          return throwformattedErr(res, "error batch posting new doc: " + res.unparsedBody);
         }
       });
     },
@@ -172,9 +172,9 @@
           });
         }).then(function(doc) {
           return db.put(doc);
-        }).then(function(response) {
-          if (response.ok) {
-            return response;
+        }).then(function(res) {
+          if (res.ok) {
+            return res;
           } else {
             return tryIt();
           }
@@ -186,11 +186,11 @@
     "delete": function(docId, rev) {
       var url;
       url = this.docUrl(docId) + '?rev=' + encodeURIComponent(rev);
-      return this.cot.jsonRequest('DELETE', url).then(function(response) {
-        if (response.statusCode === 200) {
-          return response.body;
+      return this.cot.jsonRequest('DELETE', url).then(function(res) {
+        if (res.statusCode === 200) {
+          return res.body;
         } else {
-          return throwformattedErr(response, "error deleting doc " + docId + ": " + response.unparsedBody);
+          return throwformattedErr(res, "error deleting doc " + docId + ": " + res.unparsedBody);
         }
       });
     },
@@ -199,11 +199,11 @@
       url = "/" + this.name + "/_bulk_docs";
       return this.cot.jsonRequest('POST', url, {
         docs: docs
-      }).then(function(response) {
-        if (response.statusCode !== 201) {
-          return throwformattedErr(response, "error posting to _bulk_docs: " + response.unparsedBody);
+      }).then(function(res) {
+        if (res.statusCode !== 201) {
+          return throwformattedErr(res, "error posting to _bulk_docs: " + res.unparsedBody);
         } else {
-          return response.body;
+          return res.body;
         }
       });
     },
@@ -226,11 +226,11 @@
       var qs, url;
       qs = this.buildQueryString(query);
       url = "/" + this.name + "/" + path + "?" + qs;
-      return this.cot.jsonRequest('GET', url).then(function(response) {
-        if (response.statusCode !== 200) {
-          return throwformattedErr(response, "error reading view " + path + ": " + response.unparsedBody);
+      return this.cot.jsonRequest('GET', url).then(function(res) {
+        if (res.statusCode !== 200) {
+          return throwformattedErr(res, "error reading view " + path + ": " + res.unparsedBody);
         } else {
-          return response.body;
+          return res.body;
         }
       });
     },
@@ -246,11 +246,11 @@
       url = "/" + this.name + "/" + path + "?" + qs;
       return this.cot.jsonRequest('POST', url, {
         keys: keys
-      }).then(function(response) {
-        if (response.statusCode !== 200) {
-          return throwformattedErr(response, "error reading view " + path + ": " + response.unparsedBody);
+      }).then(function(res) {
+        if (res.statusCode !== 200) {
+          return throwformattedErr(res, "error reading view " + path + ": " + res.unparsedBody);
         } else {
-          return response.body;
+          return res.body;
         }
       });
     },
@@ -276,11 +276,11 @@
       }
       qs = querystring.stringify(q);
       path = "/" + this.name + "/_changes?" + qs;
-      return this.cot.jsonRequest('GET').then(function(response) {
-        if (response.statusCode !== 200) {
-          return throwformattedErr(response, "error reading _changes: " + response.unparsedBody);
+      return this.cot.jsonRequest('GET').then(function(res) {
+        if (res.statusCode !== 200) {
+          return throwformattedErr(res, "error reading _changes: " + res.unparsedBody);
         } else {
-          return response.body;
+          return res.body;
         }
       });
     }

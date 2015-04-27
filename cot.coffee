@@ -83,20 +83,20 @@ Cot:: =
       headers: headers
 
     request.on 'error', deferred.reject.bind(deferred)
-    request.on 'response', (response) ->
-      response.setEncoding 'utf8'
+    request.on 'res', (res) ->
+      res.setEncoding 'utf8'
       buffer = ''
-      response.on 'data', (data) ->
+      res.on 'data', (data) ->
         buffer += data
         return
 
-      response.on 'error', deferred.reject.bind(deferred)
-      response.on 'end', ->
+      res.on 'error', deferred.reject.bind(deferred)
+      res.on 'end', ->
         myResponse =
-          statusCode: response.statusCode
+          statusCode: res.statusCode
           unparsedBody: buffer
 
-        if response.headers['content-type'] is 'application/json'
+        if res.headers['content-type'] is 'application/json'
           try
             myResponse.body = JSON.parse(buffer)
           catch err
@@ -114,9 +114,9 @@ Cot:: =
 
   db: (name) -> new DbHandle(this, name)
 
-throwformattedErr = (response, message)->
+throwformattedErr = (res, message)->
   err = new Error message
-  err.status = response.statusCode
+  err.status = res.statusCode
   throw err
 
 DbHandle:: =
@@ -130,51 +130,51 @@ DbHandle:: =
 
   info: ->
     @cot.jsonRequest 'GET', "/#{@name}"
-    .then (response) -> response.body
+    .then (res) -> res.body
 
 
   get: (docId) ->
     @cot.jsonRequest 'GET', @docUrl(docId)
-    .then (response) ->
-      if response.statusCode isnt 200
-        throwformattedErr response, "error getting doc #{docId}: #{response.unparsedBody}"
-      else response.body
+    .then (res) ->
+      if res.statusCode isnt 200
+        throwformattedErr res, "error getting doc #{docId}: #{res.unparsedBody}"
+      else res.body
 
   exists: (docId) ->
     @cot.jsonRequest 'GET', @docUrl(docId)
-    .then (response) ->
-      if response.statusCode is 404 then null
-      else if response.statusCode isnt 200
-        throwformattedErr response, "error getting doc #{docId}: #{response.unparsedBody}"
-      else response.body
+    .then (res) ->
+      if res.statusCode is 404 then null
+      else if res.statusCode isnt 200
+        throwformattedErr res, "error getting doc #{docId}: #{res.unparsedBody}"
+      else res.body
 
   put: (doc) ->
     @cot.jsonRequest 'PUT', @docUrl(doc._id), doc
-    .then (response) ->
-      if response.statusCode in [ 200, 201, 409 ]
-        response.body
+    .then (res) ->
+      if res.statusCode in [ 200, 201, 409 ]
+        res.body
       else
-        throwformattedErr response, "error putting doc #{doc._id}: #{response.unparsedBody}"
+        throwformattedErr res, "error putting doc #{doc._id}: #{res.unparsedBody}"
 
 
   post: (doc) ->
     @cot.jsonRequest 'POST', "/#{@name}", doc
-    .then (response) ->
-      if response.statusCode is 201 then response.body
+    .then (res) ->
+      if res.statusCode is 201 then res.body
       else if doc._id
-        throwformattedErr response, "error posting doc #{doc._id}: #{response.unparsedBody}"
+        throwformattedErr res, "error posting doc #{doc._id}: #{res.unparsedBody}"
       else
-        throwformattedErr response, "error posting new doc: #{response.unparsedBody}"
+        throwformattedErr res, "error posting new doc: #{res.unparsedBody}"
 
   batch: (doc) ->
     path = "/#{@name}?batch=ok"
     @cot.jsonRequest('POST', path, doc)
-    .then (response) ->
-      if response.statusCode is 202 then response.body
+    .then (res) ->
+      if res.statusCode is 202 then res.body
       else if doc._id
-        throwformattedErr response, "error batch posting doc #{doc._id}: #{response.unparsedBody}"
+        throwformattedErr res, "error batch posting doc #{doc._id}: #{res.unparsedBody}"
       else
-        throwformattedErr response, "error batch posting new doc: #{response.unparsedBody}"
+        throwformattedErr res, "error batch posting new doc: #{res.unparsedBody}"
 
 
   update: (docId, fn) ->
@@ -182,8 +182,8 @@ DbHandle:: =
       db.exists(docId)
       .then (doc) -> fn doc or _id: docId
       .then (doc) -> db.put doc
-      .then (response) ->
-        if response.ok then response
+      .then (res) ->
+        if res.ok then res
         else tryIt()
 
     db = this
@@ -191,20 +191,20 @@ DbHandle:: =
 
   delete: (docId, rev) ->
     url = @docUrl(docId) + '?rev=' + encodeURIComponent(rev)
-    @cot.jsonRequest('DELETE', url).then (response) ->
-      if response.statusCode is 200
-        response.body
+    @cot.jsonRequest('DELETE', url).then (res) ->
+      if res.statusCode is 200
+        res.body
       else
-        throwformattedErr response, "error deleting doc #{docId}: #{response.unparsedBody}"
+        throwformattedErr res, "error deleting doc #{docId}: #{res.unparsedBody}"
 
 
   bulk: (docs) ->
     url = "/#{@name}/_bulk_docs"
     @cot.jsonRequest 'POST', url, {docs: docs}
-    .then (response) ->
-      if response.statusCode isnt 201
-        throwformattedErr response, "error posting to _bulk_docs: #{response.unparsedBody}"
-      else response.body
+    .then (res) ->
+      if res.statusCode isnt 201
+        throwformattedErr res, "error posting to _bulk_docs: #{res.unparsedBody}"
+      else res.body
 
   buildQueryString: (query)->
     query ||= {}
@@ -221,10 +221,10 @@ DbHandle:: =
     qs = @buildQueryString query
     url = "/#{@name}/#{path}?#{qs}"
     @cot.jsonRequest 'GET', url
-    .then (response) ->
-      if response.statusCode isnt 200
-        throwformattedErr response, "error reading view #{path}: #{response.unparsedBody}"
-      else response.body
+    .then (res) ->
+      if res.statusCode isnt 200
+        throwformattedErr res, "error reading view #{path}: #{res.unparsedBody}"
+      else res.body
 
 
   view: (designName, viewName, query) ->
@@ -237,10 +237,10 @@ DbHandle:: =
     qs = @buildQueryString query
     url = "/#{@name}/#{path}?#{qs}"
     @cot.jsonRequest 'POST', url, {keys: keys}
-    .then (response) ->
-      if response.statusCode isnt 200
-        throwformattedErr response, "error reading view #{path}: #{response.unparsedBody}"
-      else response.body
+    .then (res) ->
+      if res.statusCode isnt 200
+        throwformattedErr res, "error reading view #{path}: #{res.unparsedBody}"
+      else res.body
 
 
   viewKeys: (designName, viewName, keys, query) ->
@@ -260,7 +260,7 @@ DbHandle:: =
     if query.longpoll then q.feed = 'longpoll'
     qs = querystring.stringify(q)
     path = "/#{@name}/_changes?#{qs}"
-    @cot.jsonRequest('GET', ).then (response) ->
-      if response.statusCode isnt 200
-        throwformattedErr response, "error reading _changes: #{response.unparsedBody}"
-      else response.body
+    @cot.jsonRequest('GET', ).then (res) ->
+      if res.statusCode isnt 200
+        throwformattedErr res, "error reading _changes: #{res.unparsedBody}"
+      else res.body
