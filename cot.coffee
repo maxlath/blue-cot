@@ -114,6 +114,11 @@ Cot:: =
 
   db: (name) -> new DbHandle(this, name)
 
+throwformattedErr = (response, message)->
+  err = new Error message
+  err.status = response.statusCode
+  throw err
+
 DbHandle:: =
   docUrl: (docId) ->
     if typeof docId isnt 'string' or docId.length is 0
@@ -132,8 +137,7 @@ DbHandle:: =
     @cot.jsonRequest 'GET', @docUrl(docId)
     .then (response) ->
       if response.statusCode isnt 200
-        err = "error getting doc #{docId}: #{response.unparsedBody}"
-        throw new Error err
+        throwformattedErr response, "error getting doc #{docId}: #{response.unparsedBody}"
       else response.body
 
   exists: (docId) ->
@@ -141,8 +145,7 @@ DbHandle:: =
     .then (response) ->
       if response.statusCode is 404 then null
       else if response.statusCode isnt 200
-        err = "error getting doc #{docId}: #{response.unparsedBody}"
-        throw new Error err
+        throwformattedErr response, "error getting doc #{docId}: #{response.unparsedBody}"
       else response.body
 
   put: (doc) ->
@@ -151,8 +154,7 @@ DbHandle:: =
       if response.statusCode in [ 200, 201, 409 ]
         response.body
       else
-        err = "error putting doc #{doc._id}: #{response.unparsedBody}"
-        throw new Error err
+        throwformattedErr response, "error putting doc #{doc._id}: #{response.unparsedBody}"
 
 
   post: (doc) ->
@@ -160,10 +162,9 @@ DbHandle:: =
     .then (response) ->
       if response.statusCode is 201 then response.body
       else if doc._id
-        err = "error posting doc #{doc._id}: #{response.unparsedBody}"
-        throw new Error err
+        throwformattedErr response, "error posting doc #{doc._id}: #{response.unparsedBody}"
       else
-        throw new Error "error posting new doc: #{response.unparsedBody}"
+        throwformattedErr response, "error posting new doc: #{response.unparsedBody}"
 
   batch: (doc) ->
     path = "/#{@name}?batch=ok"
@@ -171,10 +172,9 @@ DbHandle:: =
     .then (response) ->
       if response.statusCode is 202 then response.body
       else if doc._id
-        err = "error batch posting doc #{doc._id}: #{response.unparsedBody}"
-        throw new Error err
+        throwformattedErr response, "error batch posting doc #{doc._id}: #{response.unparsedBody}"
       else
-        throw new Error "error batch posting new doc: #{response.unparsedBody}"
+        throwformattedErr response, "error batch posting new doc: #{response.unparsedBody}"
 
 
   update: (docId, fn) ->
@@ -195,8 +195,7 @@ DbHandle:: =
       if response.statusCode is 200
         response.body
       else
-        err = "error deleting doc #{docId}: #{response.unparsedBody}"
-        throw new Error err
+        throwformattedErr response, "error deleting doc #{docId}: #{response.unparsedBody}"
 
 
   bulk: (docs) ->
@@ -204,7 +203,7 @@ DbHandle:: =
     @cot.jsonRequest 'POST', url, {docs: docs}
     .then (response) ->
       if response.statusCode isnt 201
-        throw new Error "error posting to _bulk_docs: #{response.unparsedBody}"
+        throwformattedErr response, "error posting to _bulk_docs: #{response.unparsedBody}"
       else response.body
 
   buildQueryString: (query)->
@@ -224,8 +223,7 @@ DbHandle:: =
     @cot.jsonRequest 'GET', url
     .then (response) ->
       if response.statusCode isnt 200
-        err = "error reading view #{path}: #{response.unparsedBody}"
-        throw new Error err
+        throwformattedErr response, "error reading view #{path}: #{response.unparsedBody}"
       else response.body
 
 
@@ -241,8 +239,7 @@ DbHandle:: =
     @cot.jsonRequest 'POST', url, {keys: keys}
     .then (response) ->
       if response.statusCode isnt 200
-        err = "error reading view #{path}: #{response.unparsedBody}"
-        throw new Error err
+        throwformattedErr response, "error reading view #{path}: #{response.unparsedBody}"
       else response.body
 
 
@@ -265,5 +262,5 @@ DbHandle:: =
     path = "/#{@name}/_changes?#{qs}"
     @cot.jsonRequest('GET', ).then (response) ->
       if response.statusCode isnt 200
-        throw new Error "error reading _changes: #{response.unparsedBody}"
+        throwformattedErr response, "error reading _changes: #{response.unparsedBody}"
       else response.body
