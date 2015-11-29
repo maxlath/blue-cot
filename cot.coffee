@@ -1,5 +1,5 @@
 #
-#Copyright (c) 2013 Will Conant, http://willconant.com/
+# Copyright (c) 2015 Maxime Lathuiliere, http://maxlath.eu
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -21,13 +21,23 @@
 #
 
 Cot = (opts) ->
-  @port = opts.port
-  @hostname = opts.hostname
-  @auth = opts.auth
-  @ssl = opts.ssl
-  @http = (if opts.ssl then require('https') else require('http'))
+  { port, hostname, user, pass, auth, ssl, hostname } = opts
+  @port = port
+  @hostname = hostname
+
+  # adaptor to assure compatibilty with cot-node interface
+  if auth? then [ user, pass ] = auth.split ':'
+  @user = user
+  @pass = pass
+
+  @ssl = ssl
   @hostHeader = @hostname
-  @hostHeader += ':' + @port  if (not @ssl and @port isnt 80) or (@ssl and @port isnt 443)
+
+  notStandardHttpPort = not ssl and port isnt 80
+  notStandardHttpsPort = ssl and port isnt 443
+  if notStandardHttpPort or notStandardHttpsPort
+    @hostHeader += ':' + port
+
   return
 
 DbHandle = (cot, name) ->
@@ -36,7 +46,7 @@ DbHandle = (cot, name) ->
   return
 
 querystring = require 'querystring'
-Promise = require 'bluebird'
+breq = require 'bluereq'
 
 module.exports = Cot
 
@@ -68,55 +78,43 @@ changesQueryKeys = [
 
 Cot:: =
   jsonRequest: (method, path, body) ->
-    deferred = Promise.defer()
+    protocol = if @ssl then 'https' else 'http'
 
-    headers = {}
-    headers['accept'] = 'application/json'
-    headers['host'] = @hostHeader
-    headers['content-type'] = 'application/json'  if body
-    request = @http.request
-      hostname: @hostname
-      port: @port
-      auth: @auth
-      path: path
-      method: method
+    headers =
+      accept: 'application/json'
+      host: @hostHeader
+      'content-type': 'application/json'  if body
+
+    params =
+      url: "#{protocol}://#{@hostname}:#{@port}#{path}"
+      body: body
       headers: headers
 
-    request.on 'error', deferred.reject.bind(deferred)
-    request.on 'res', (res) ->
-      res.setEncoding 'utf8'
-      buffer = ''
-      res.on 'data', (data) ->
-        buffer += data
-        return
+    if @user? and @pass?
+      params.auth =
+        user: @user
+        pass: @pass
 
-      res.on 'error', deferred.reject.bind(deferred)
-      res.on 'end', ->
-        myResponse =
-          statusCode: res.statusCode
-          unparsedBody: buffer
+    verb = method.toLowerCase()
 
-        if res.headers['content-type'] is 'application/json'
-          try
-            myResponse.body = JSON.parse(buffer)
-          catch err
-            deferred.reject err
-            return
-        deferred.resolve myResponse
-        return
-
-      return
-
-    if body
-      request.end JSON.stringify(body)
-    else request.end()
-    deferred.promise
+    return breq[verb](params)
 
   db: (name) -> new DbHandle(this, name)
 
 throwformattedErr = (res, message)->
+  { statusCode, body } = res
+  message += ": #{statusCode}"
+
+  try bodyStr = JSON.stringify body
+  catch err
+    console.log "couldn't parse body".yellow
+    bodyStr = body
+
+  if bodyStr? then message += " - #{bodyStr}"
+
   err = new Error message
   err.status = res.statusCode
+  err.context = res.body
   throw err
 
 DbHandle:: =
@@ -137,7 +135,7 @@ DbHandle:: =
     @cot.jsonRequest 'GET', @docUrl(docId)
     .then (res) ->
       if res.statusCode isnt 200
-        throwformattedErr res, "error getting doc #{docId}: #{res.unparsedBody}"
+        throwformattedErr res, "error getting doc #{docId}"
       else res.body
 
   exists: (docId) ->
@@ -145,7 +143,7 @@ DbHandle:: =
     .then (res) ->
       if res.statusCode is 404 then null
       else if res.statusCode isnt 200
-        throwformattedErr res, "error getting doc #{docId}: #{res.unparsedBody}"
+        throwformattedErr res, "error getting doc #{docId}"
       else res.body
 
   put: (doc) ->
@@ -154,7 +152,7 @@ DbHandle:: =
       if res.statusCode in [ 200, 201, 409 ]
         res.body
       else
-        throwformattedErr res, "error putting doc #{doc._id}: #{res.unparsedBody}"
+        throwformattedErr res, "error putting doc #{doc._id}"
 
 
   post: (doc) ->
@@ -162,9 +160,9 @@ DbHandle:: =
     .then (res) ->
       if res.statusCode is 201 then res.body
       else if doc._id
-        throwformattedErr res, "error posting doc #{doc._id}: #{res.unparsedBody}"
+        throwformattedErr res, "error posting doc #{doc._id}"
       else
-        throwformattedErr res, "error posting new doc: #{res.unparsedBody}"
+        throwformattedErr res, "error posting new doc"
 
   batch: (doc) ->
     path = "/#{@name}?batch=ok"
@@ -172,9 +170,9 @@ DbHandle:: =
     .then (res) ->
       if res.statusCode is 202 then res.body
       else if doc._id
-        throwformattedErr res, "error batch posting doc #{doc._id}: #{res.unparsedBody}"
+        throwformattedErr res, "error batch posting doc #{doc._id}"
       else
-        throwformattedErr res, "error batch posting new doc: #{res.unparsedBody}"
+        throwformattedErr res, "error batch posting new doc"
 
 
   update: (docId, fn) ->
@@ -195,7 +193,7 @@ DbHandle:: =
       if res.statusCode is 200
         res.body
       else
-        throwformattedErr res, "error deleting doc #{docId}: #{res.unparsedBody}"
+        throwformattedErr res, "error deleting doc #{docId}"
 
 
   bulk: (docs) ->
@@ -203,7 +201,7 @@ DbHandle:: =
     @cot.jsonRequest 'POST', url, {docs: docs}
     .then (res) ->
       if res.statusCode isnt 201
-        throwformattedErr res, "error posting to _bulk_docs: #{res.unparsedBody}"
+        throwformattedErr res, "error posting to _bulk_docs"
       else res.body
 
   buildQueryString: (query)->
@@ -223,7 +221,7 @@ DbHandle:: =
     @cot.jsonRequest 'GET', url
     .then (res) ->
       if res.statusCode isnt 200
-        throwformattedErr res, "error reading view #{path}: #{res.unparsedBody}"
+        throwformattedErr res, "error reading view #{path}"
       else res.body
 
 
@@ -239,7 +237,7 @@ DbHandle:: =
     @cot.jsonRequest 'POST', url, {keys: keys}
     .then (res) ->
       if res.statusCode isnt 200
-        throwformattedErr res, "error reading view #{path}: #{res.unparsedBody}"
+        throwformattedErr res, "error reading view #{path}"
       else res.body
 
 
@@ -258,9 +256,11 @@ DbHandle:: =
         q[key] = JSON.stringify(query[key])
 
     if query.longpoll then q.feed = 'longpoll'
-    qs = querystring.stringify(q)
+    qs = querystring.stringify q
     path = "/#{@name}/_changes?#{qs}"
-    @cot.jsonRequest('GET', ).then (res) ->
+
+    @cot.jsonRequest 'GET', path
+    .then (res) ->
       if res.statusCode isnt 200
-        throwformattedErr res, "error reading _changes: #{res.unparsedBody}"
+        throwformattedErr res, "error reading _changes"
       else res.body

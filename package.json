@@ -1,5 +1,5 @@
 {
-  "name": "cot",
+  "name": "blue-cot",
   "description": "bluebird promise-based CouchDB library with no surprises (in a good way)",
   "keywords": [
     "couch",
@@ -9,27 +9,30 @@
     "bluebird"
   ],
   "scripts": {
-    "test": "mocha"
+    "build": "coffee -c cot.coffee",
+    "watch": "coffee -cw cot.coffee",
+    "build-test": "coffee -c test/*.coffee",
+    "watch-test": "coffee -cw test/*.coffee",
+    "test": "npm run build-test && mocha"
   },
   "version": "0.0.10",
   "main": "cot",
   "dependencies": {
-    "bluebird": "^2.3.10"
+    "bluereq": "^0.3.0"
   },
   "author": {
-    "name": "Will Conant",
-    "email": "will.conant@gmail.com",
-    "url": "http://willconant.com"
+    "name": "maxlath",
+    "url": "http://maxlath.eu"
   },
-  "contributors": [
-    "maxlath"
-  ],
   "repository": {
     "type": "git",
-    "url": "http://github.com/willconant/cot-node"
+    "url": "http://github.com/maxlath/blue-cot"
   },
+  "forkedFrom": "http://github.com/willconant/cot-node",
   "devDependencies": {
+    "bluebird": "^3.0.5",
     "chai": "^1.9.2",
+    "coffee-script": "^1.10.0",
     "mocha": "^2.0.1"
   }
 }
