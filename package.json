@@ -15,7 +15,7 @@
     "watch-test": "coffee -cw test/*.coffee",
     "test": "npm run build-test && mocha"
   },
-  "version": "0.0.10",
+  "version": "1.0.0",
   "main": "cot",
   "dependencies": {
     "bluereq": "^0.3.0"
