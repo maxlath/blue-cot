@@ -42,14 +42,16 @@
       protocol = this.ssl ? 'https' : 'http';
       headers = {
         accept: 'application/json',
-        host: this.hostHeader,
-        'content-type': body ? 'application/json' : void 0
+        host: this.hostHeader
       };
       params = {
         url: protocol + "://" + this.hostname + ":" + this.port + path,
-        body: body,
         headers: headers
       };
+      if (body != null) {
+        headers['content-type'] = 'application/json';
+        params.body = body;
+      }
       if ((this.user != null) && (this.pass != null)) {
         params.auth = {
           user: this.user,

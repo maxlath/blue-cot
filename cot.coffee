@@ -83,12 +83,14 @@ Cot:: =
     headers =
       accept: 'application/json'
       host: @hostHeader
-      'content-type': 'application/json'  if body
 
     params =
       url: "#{protocol}://#{@hostname}:#{@port}#{path}"
-      body: body
       headers: headers
+
+    if body?
+      headers['content-type'] = 'application/json'
+      params.body = body
 
     if @user? and @pass?
       params.auth =
