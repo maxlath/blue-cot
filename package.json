@@ -16,7 +16,7 @@
     "test": "npm run build-test && mocha",
     "benchmark": "coffee benchmark/benchmark.coffee"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "cot",
   "dependencies": {
     "bluereq": "^0.3.0"
