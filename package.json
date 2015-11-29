@@ -14,7 +14,8 @@
     "build-test": "coffee -c test/*.coffee",
     "watch-test": "coffee -cw test/*.coffee",
     "test": "npm run build-test && mocha",
-    "benchmark": "coffee benchmark/benchmark.coffee"
+    "benchmark": "coffee benchmark/benchmark.coffee",
+    "prepublish": "npm build && npm test"
   },
   "version": "1.0.1",
   "main": "cot",
