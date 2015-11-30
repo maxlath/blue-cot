@@ -3,17 +3,16 @@
   var Cot, DbHandle, breq, changesQueryKeys, querystring, throwformattedErr, viewQueryKeys;
 
   Cot = function(opts) {
-    var auth, hostname, notStandardHttpPort, notStandardHttpsPort, pass, port, ref, ssl, user;
+    var auth, hostname, notStandardHttpPort, notStandardHttpsPort, pass, port, protocol, ref, ssl, user;
     port = opts.port, hostname = opts.hostname, user = opts.user, pass = opts.pass, auth = opts.auth, ssl = opts.ssl, hostname = opts.hostname;
-    this.port = port;
-    this.hostname = hostname;
+    protocol = ssl ? 'https' : 'http';
+    this.host = protocol + "://" + hostname + ":" + port;
     if (auth != null) {
       ref = auth.split(':'), user = ref[0], pass = ref[1];
     }
     this.user = user;
     this.pass = pass;
-    this.ssl = ssl;
-    this.hostHeader = this.hostname;
+    this.hostHeader = hostname;
     notStandardHttpPort = !ssl && port !== 80;
     notStandardHttpsPort = ssl && port !== 443;
     if (notStandardHttpPort || notStandardHttpsPort) {
@@ -38,14 +37,13 @@
 
   Cot.prototype = {
     jsonRequest: function(method, path, body) {
-      var headers, params, protocol, verb;
-      protocol = this.ssl ? 'https' : 'http';
+      var headers, params, verb;
       headers = {
         accept: 'application/json',
         host: this.hostHeader
       };
       params = {
-        url: protocol + "://" + this.hostname + ":" + this.port + path,
+        url: "" + this.host + path,
         headers: headers
       };
       if (body != null) {

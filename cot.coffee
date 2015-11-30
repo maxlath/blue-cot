@@ -22,16 +22,16 @@
 
 Cot = (opts) ->
   { port, hostname, user, pass, auth, ssl, hostname } = opts
-  @port = port
-  @hostname = hostname
+
+  protocol = if ssl then 'https' else 'http'
+  @host = "#{protocol}://#{hostname}:#{port}"
 
   # adaptor to assure compatibilty with cot-node interface
   if auth? then [ user, pass ] = auth.split ':'
   @user = user
   @pass = pass
 
-  @ssl = ssl
-  @hostHeader = @hostname
+  @hostHeader = hostname
 
   notStandardHttpPort = not ssl and port isnt 80
   notStandardHttpsPort = ssl and port isnt 443
@@ -78,14 +78,12 @@ changesQueryKeys = [
 
 Cot:: =
   jsonRequest: (method, path, body) ->
-    protocol = if @ssl then 'https' else 'http'
-
     headers =
       accept: 'application/json'
       host: @hostHeader
 
     params =
-      url: "#{protocol}://#{@hostname}:#{@port}#{path}"
+      url: "#{@host}#{path}"
       headers: headers
 
     if body?
