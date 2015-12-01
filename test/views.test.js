@@ -43,7 +43,7 @@
         };
         docPromises.push(db.post(designDoc));
         return Promise.all(docPromises);
-      }).nodeify(done);
+      }).asCallback(done);
     });
     return describe('#view', function() {
       return it('should return doc-3 thru doc-6 using startkey_docid and endkey_docid', function(done) {
@@ -57,7 +57,7 @@
           expect(response.rows[1].id).to.equal('doc-4');
           expect(response.rows[2].id).to.equal('doc-5');
           return expect(response.rows[3].id).to.equal('doc-6');
-        }).nodeify(done);
+        }).asCallback(done);
       });
     });
   });

@@ -60,7 +60,7 @@
             }
           }
         });
-      }).nodeify(done);
+      }).asCallback(done);
     });
     describe('#docUrl', function() {
       it('should encode doc ids', function() {
@@ -79,7 +79,7 @@
         return db.info().then(function(info) {
           expect(info).to.be.a('object');
           return expect(info.doc_count).to.equal(2);
-        }).nodeify(done);
+        }).asCallback(done);
       });
     });
     describe('#get', function() {
@@ -87,7 +87,7 @@
         return db.get('person-1').then(function(doc) {
           expect(doc).to.be.a('object');
           return expect(doc.name).to.equal('Will Conant');
-        }).nodeify(done);
+        }).asCallback(done);
       });
     });
     describe('#view', function() {
@@ -97,7 +97,7 @@
           expect(response.rows).to.be.array;
           expect(response.rows.length).to.equal(1);
           return expect(response.rows[0].key).to.equal('Will Conant');
-        }).nodeify(done);
+        }).asCallback(done);
       });
     });
     describe('#put', function() {
@@ -110,7 +110,7 @@
           return db.put(doc).then(function(response) {
             return expect(response.error).to.equal('conflict');
           });
-        }).nodeify(done);
+        }).asCallback(done);
       });
     });
     describe('#post', function() {
@@ -142,14 +142,14 @@
           return db.get(doc._id);
         }).then(function(response) {
           return expect(response._rev).to.equal(origRev);
-        }).nodeify(done);
+        }).asCallback(done);
       });
     });
     return describe('#exists', function() {
       return it('should return null for nonexistent doc', function(done) {
         return db.exists('does-not-exist').then(function(doc) {
           return expect(doc).to.be["null"];
-        }).nodeify(done);
+        }).asCallback(done);
       });
     });
   });

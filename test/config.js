@@ -16,14 +16,6 @@
     throw err;
   });
 
-  Promise.prototype.nodeify = function(nodeback) {
-    return this.then(function(value) {
-      return nodeback(null, value);
-    })["catch"](function(err) {
-      return nodeback(err);
-    });
-  };
-
   exports.serverOpts = {
     port: 5984,
     hostname: 'localhost',

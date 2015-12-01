@@ -43,7 +43,7 @@ describe 'DbHandle', ->
         views:
           testView:
             map: 'function(d) { emit(d.name, null) }'
-    .nodeify done
+    .asCallback done
 
   describe '#docUrl', ->
     it 'should encode doc ids', ->
@@ -60,7 +60,7 @@ describe 'DbHandle', ->
         expect(info).to.be.a 'object'
         expect(info.doc_count).to.equal 2
 
-      .nodeify done
+      .asCallback done
 
   describe '#get', ->
     it 'should return test document from database', (done)->
@@ -69,7 +69,7 @@ describe 'DbHandle', ->
         expect(doc).to.be.a 'object'
         expect(doc.name).to.equal 'Will Conant'
 
-      .nodeify done
+      .asCallback done
 
   describe '#view', ->
     it 'should return a single row', (done)->
@@ -80,7 +80,7 @@ describe 'DbHandle', ->
         expect(response.rows.length).to.equal 1
         expect(response.rows[0].key).to.equal 'Will Conant'
 
-      .nodeify done
+      .asCallback done
 
   describe '#put', ->
     it 'should treat conflicts as expected', (done)->
@@ -90,7 +90,7 @@ describe 'DbHandle', ->
         db.put doc
         .then (response)-> expect(response.error).to.equal 'conflict'
 
-      .nodeify done
+      .asCallback done
 
   describe '#post', ->
     it 'should treat conflicts as errors', (done)->
@@ -113,10 +113,10 @@ describe 'DbHandle', ->
       .delay(500)
       .then (response)-> db.get doc._id
       .then (response)-> expect(response._rev).to.equal origRev
-      .nodeify done
+      .asCallback done
 
   describe '#exists', ->
     it 'should return null for nonexistent doc', (done)->
       db.exists 'does-not-exist'
       .then (doc)-> expect(doc).to.be.null
-      .nodeify done
+      .asCallback done
