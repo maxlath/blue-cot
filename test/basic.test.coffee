@@ -1,6 +1,6 @@
 chai = require 'chai'
 expect = chai.expect
-Cot = require '../cot'
+Cot = require '../cot.coffee'
 config = require './config'
 
 describe 'Cot', ->
@@ -24,35 +24,41 @@ describe 'Cot', ->
       ssl: true
     expect(c4.hostHeader).to.equal 'foo:8080'
 
+catch404 = (err)->
+  if err.statusCode is 404 then return
+  else throw err
+
 describe 'DbHandle', ->
   cot = new Cot config.serverOpts
   db = cot.db config.dbName
 
   beforeEach (done)->
     cot.jsonRequest 'DELETE', '/' + config.dbName
+    .catch catch404
     .then -> cot.jsonRequest 'PUT', '/' + config.dbName
     .then ->
       db.post
         _id: 'person-1'
         type: 'person'
         name: 'Will Conant'
-
     .then ->
       db.post
         _id: '_design/test'
         views:
           testView:
             map: 'function(d) { emit(d.name, null) }'
-    .asCallback done
+    .then -> done()
 
   describe '#docUrl', ->
-    it 'should encode doc ids', ->
+    it 'should encode doc ids', (done)->
       encoded = db.docUrl('foo/bar')
       expect(encoded).to.equal '/test-cot-node/foo%2Fbar'
+      done()
 
-    it 'should not encode first slash in design doc ids', ->
+    it 'should not encode first slash in design doc ids', (done)->
       encoded = db.docUrl('_design/foo/bar')
       expect(encoded).to.equal '/test-cot-node/_design/foo%2Fbar'
+      done()
 
   describe '#info', ->
     it 'should return database info', (done)->
@@ -60,7 +66,7 @@ describe 'DbHandle', ->
         expect(info).to.be.a 'object'
         expect(info.doc_count).to.equal 2
 
-      .asCallback done
+      .then -> done()
 
   describe '#get', ->
     it 'should return test document from database', (done)->
@@ -69,7 +75,7 @@ describe 'DbHandle', ->
         expect(doc).to.be.a 'object'
         expect(doc.name).to.equal 'Will Conant'
 
-      .asCallback done
+      .then -> done()
 
   describe '#view', ->
     it 'should return a single row', (done)->
@@ -79,18 +85,17 @@ describe 'DbHandle', ->
         expect(response.rows).to.be.array
         expect(response.rows.length).to.equal 1
         expect(response.rows[0].key).to.equal 'Will Conant'
-
-      .asCallback done
+        done()
 
   describe '#put', ->
     it 'should treat conflicts as expected', (done)->
       doc = _id: 'put-test'
       db.put doc
-      .then (response)->
+      .then (resp)->
         db.put doc
-        .then (response)-> expect(response.error).to.equal 'conflict'
-
-      .asCallback done
+        .catch (err)->
+          expect(err.body.error).to.equal 'conflict'
+          done()
 
   describe '#post', ->
     it 'should treat conflicts as errors', (done)->
@@ -113,10 +118,11 @@ describe 'DbHandle', ->
       .delay(500)
       .then (response)-> db.get doc._id
       .then (response)-> expect(response._rev).to.equal origRev
-      .asCallback done
+      .then -> done()
 
   describe '#exists', ->
     it 'should return null for nonexistent doc', (done)->
       db.exists 'does-not-exist'
-      .then (doc)-> expect(doc).to.be.null
-      .asCallback done
+      .catch (err)->
+        expect(err.statusCode).to.equal 404
+        done()

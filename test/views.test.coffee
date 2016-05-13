@@ -1,6 +1,6 @@
 chai = require 'chai'
 expect = chai.expect
-Cot = require '../cot'
+Cot = require '../cot.coffee'
 config = require './config'
 Promise = require 'bluebird'
 
@@ -28,7 +28,7 @@ describe 'DbHandle', ->
             map: mapFn
       docPromises.push db.post(designDoc)
       Promise.all docPromises
-    .asCallback done
+    .then -> done()
 
   describe '#view', ->
     it 'should return doc-3 thru doc-6 using startkey_docid and endkey_docid', (done)->
@@ -42,4 +42,4 @@ describe 'DbHandle', ->
         expect(response.rows[1].id).to.equal 'doc-4'
         expect(response.rows[2].id).to.equal 'doc-5'
         expect(response.rows[3].id).to.equal 'doc-6'
-      .asCallback done
+      .then -> done()
