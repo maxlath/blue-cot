@@ -13,4 +13,5 @@ exports.serverOpts =
   hostname: 'localhost'
   user: 'admin'
   pass: 'admin'
+  debug: true
 exports.dbName = 'test-cot-node'

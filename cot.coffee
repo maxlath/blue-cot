@@ -1,5 +1,5 @@
 Cot = (opts) ->
-  { port, hostname, user, pass, auth, ssl, hostname } = opts
+  { port, hostname, user, pass, auth, ssl, hostname, debug } = opts
 
   protocol = if ssl then 'https' else 'http'
   @host = "#{protocol}://#{hostname}:#{port}"
@@ -15,6 +15,9 @@ Cot = (opts) ->
   notStandardHttpsPort = ssl and port isnt 443
   if notStandardHttpPort or notStandardHttpsPort
     @hostHeader += ':' + port
+
+  # Making sure it's a boolean, defaulting to false
+  @debug = debug is true
 
   return
 
@@ -68,6 +71,11 @@ Cot:: =
       headers['content-type'] = 'application/json'
       params.body = body
 
+    if @debug
+      # stringify the body to make it copy-pastable for curl
+      body = JSON.stringify params.body
+      console.log '[debug] jsonRequest\n'.cyan, method, params.url, body
+
     if @user? and @pass?
       params.auth =
         user: @user
@@ -119,6 +127,8 @@ DbHandle:: =
   exists: (docId) ->
     @cot.jsonRequest 'GET', @docUrl(docId)
     .then (res) ->
+      # TODO: remove error checkers like this 404 one
+      # has bluereq now make those response be rejections
       if res.statusCode is 404 then null
       else if res.statusCode isnt 200
         throwformattedErr res, "error getting doc #{docId}"
