@@ -38,7 +38,7 @@
 
   Cot.prototype = {
     jsonRequest: function(method, path, body) {
-      var headers, params, verb;
+      var bodyStr, headers, params, verb;
       headers = {
         accept: 'application/json',
         host: this.hostHeader
@@ -52,8 +52,8 @@
         params.body = body;
       }
       if (this.debug) {
-        body = JSON.stringify(params.body);
-        console.log('[debug] jsonRequest\n'.cyan, method, params.url, body);
+        bodyStr = JSON.stringify(body) || '';
+        console.log('[debug] jsonRequest\n'.cyan, method, params.url, bodyStr);
       }
       if ((this.user != null) && (this.pass != null)) {
         params.auth = {
