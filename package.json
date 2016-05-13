@@ -11,9 +11,8 @@
   "scripts": {
     "build": "coffee -c cot.coffee",
     "watch": "coffee -cw cot.coffee",
-    "build-test": "coffee -c test/*.coffee",
-    "watch-test": "coffee -cw test/*.coffee",
-    "test": "npm run build-test && mocha",
+    "test": "mocha --compilers coffee:coffee-script/register",
+    "test-watch": "mocha --compilers coffee:coffee-script/register --watch",
     "benchmark": "coffee benchmark/benchmark.coffee",
     "prepublish": "npm build && npm test"
   },
@@ -35,6 +34,7 @@
     "benchmark": "^1.0.0",
     "bluebird": "^3.0.5",
     "chai": "^1.9.2",
+    "coffee-errors": "^0.8.6",
     "coffee-script": "^1.10.0",
     "cot": "0.0.6",
     "mocha": "^2.0.1"
