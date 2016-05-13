@@ -73,8 +73,8 @@ Cot:: =
 
     if @debug
       # stringify the body to make it copy-pastable for curl
-      body = JSON.stringify params.body
-      console.log '[debug] jsonRequest\n'.cyan, method, params.url, body
+      bodyStr = JSON.stringify(body) or ''
+      console.log '[debug] jsonRequest\n'.cyan, method, params.url, bodyStr
 
     if @user? and @pass?
       params.auth =
