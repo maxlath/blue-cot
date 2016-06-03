@@ -162,17 +162,18 @@ DbHandle:: =
       else
         throwformattedErr res, "error batch posting new doc"
 
-
   update: (docId, fn) ->
+    db = @
     tryIt = ->
-      db.exists(docId)
-      .then (doc) -> fn doc or _id: docId
-      .then (doc) -> db.put doc
-      .then (res) ->
+      db.get docId
+      .catch (err)->
+        if err.statusCode is 404 then return { _id: docId }
+        else throw err
+      .then (doc)-> db.put fn(doc)
+      .then (res)->
         if res.ok then res
         else tryIt()
 
-    db = this
     return tryIt()
 
   delete: (docId, rev) ->
@@ -227,7 +228,6 @@ DbHandle:: =
       if res.statusCode isnt 200
         throwformattedErr res, "error reading view #{path}"
       else res.body
-
 
   viewKeys: (designName, viewName, keys, query) ->
     path = "_design/#{designName}/_view/#{viewName}"

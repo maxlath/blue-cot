@@ -126,3 +126,24 @@ describe 'DbHandle', ->
       .catch (err)->
         expect(err.statusCode).to.equal 404
         done()
+
+  describe '#update', ->
+    it 'should apply the passed function to the doc', (done)->
+      db.update 'person-1', (doc)->
+        doc.b = 2
+        return doc
+      .then -> db.get 'person-1'
+      .then (doc)->
+        expect(doc.b).to.equal 2
+        done()
+      .catch (err)-> console.log err
+
+    it 'should create the doc if missing', (done)->
+      db.update 'does-not-exist', (doc)->
+        doc.hello = 123
+        return doc
+      .then -> db.get 'does-not-exist'
+      .then (doc)->
+        expect(doc.hello).to.equal 123
+        done()
+      .catch (err)-> console.log err
