@@ -161,13 +161,18 @@
     },
     update: function(docId, fn) {
       var db, tryIt;
+      db = this;
       tryIt = function() {
-        return db.exists(docId).then(function(doc) {
-          return fn(doc || {
-            _id: docId
-          });
+        return db.get(docId)["catch"](function(err) {
+          if (err.statusCode === 404) {
+            return {
+              _id: docId
+            };
+          } else {
+            throw err;
+          }
         }).then(function(doc) {
-          return db.put(doc);
+          return db.put(fn(doc));
         }).then(function(res) {
           if (res.ok) {
             return res;
@@ -176,7 +181,6 @@
           }
         });
       };
-      db = this;
       return tryIt();
     },
     "delete": function(docId, rev) {
