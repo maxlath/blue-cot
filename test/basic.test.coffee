@@ -121,10 +121,23 @@ describe 'DbHandle', ->
       .then -> done()
 
   describe '#exists', ->
-    it 'should return null for nonexistent doc', (done)->
+    it 'should return true for existing doc', (done)->
+      db.exists 'person-1'
+      .then (res)->
+        expect(res).to.equal true
+        done()
+
+    it 'should return false for non-existent doc', (done)->
       db.exists 'does-not-exist'
-      .catch (err)->
-        expect(err.statusCode).to.equal 404
+      .then (res)->
+        expect(res).to.equal false
+        done()
+
+  describe '#info', ->
+    it 'should return the db info', (done)->
+      db.info()
+      .then (res)->
+        expect(res.db_name).to.equal 'test-cot-node'
         done()
 
   describe '#update', ->
