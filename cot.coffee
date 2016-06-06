@@ -1,4 +1,4 @@
-Cot = (opts) ->
+Cot = (opts)->
   { port, hostname, user, pass, auth, ssl, hostname, debug } = opts
 
   protocol = if ssl then 'https' else 'http'
@@ -21,7 +21,7 @@ Cot = (opts) ->
 
   return
 
-DbHandle = (cot, name) ->
+DbHandle = (cot, name)->
   @cot = cot
   @name = name
   return
@@ -58,7 +58,7 @@ changesQueryKeys = [
 ]
 
 Cot:: =
-  jsonRequest: (method, path, body) ->
+  jsonRequest: (method, path, body)->
     headers =
       accept: 'application/json'
       host: @hostHeader
@@ -85,7 +85,7 @@ Cot:: =
 
     return breq[verb](params)
 
-  db: (name) -> new DbHandle(this, name)
+  db: (name)-> new DbHandle(this, name)
 
 throwformattedErr = (res, message)->
   { statusCode, body } = res
@@ -104,7 +104,7 @@ throwformattedErr = (res, message)->
   throw err
 
 DbHandle:: =
-  docUrl: (docId) ->
+  docUrl: (docId)->
     if typeof docId isnt 'string' or docId.length is 0
       throw new TypeError 'doc id must be a non-empty string'
     if docId.indexOf('_design/') is 0
@@ -114,19 +114,18 @@ DbHandle:: =
 
   info: ->
     @cot.jsonRequest 'GET', "/#{@name}"
-    .then (res) -> res.body
+    .then (res)-> res.body
 
-
-  get: (docId) ->
+  get: (docId)->
     @cot.jsonRequest 'GET', @docUrl(docId)
-    .then (res) ->
+    .then (res)->
       if res.statusCode isnt 200
         throwformattedErr res, "error getting doc #{docId}"
       else res.body
 
-  exists: (docId) ->
+  exists: (docId)->
     @cot.jsonRequest 'GET', @docUrl(docId)
-    .then (res) ->
+    .then (res)->
       # TODO: remove error checkers like this 404 one
       # has bluereq now make those response be rejections
       if res.statusCode is 404 then null
@@ -134,35 +133,35 @@ DbHandle:: =
         throwformattedErr res, "error getting doc #{docId}"
       else res.body
 
-  put: (doc) ->
+  put: (doc)->
     @cot.jsonRequest 'PUT', @docUrl(doc._id), doc
-    .then (res) ->
+    .then (res)->
       if res.statusCode in [ 200, 201, 409 ]
         res.body
       else
         throwformattedErr res, "error putting doc #{doc._id}"
 
 
-  post: (doc) ->
+  post: (doc)->
     @cot.jsonRequest 'POST', "/#{@name}", doc
-    .then (res) ->
+    .then (res)->
       if res.statusCode is 201 then res.body
       else if doc._id
         throwformattedErr res, "error posting doc #{doc._id}"
       else
         throwformattedErr res, "error posting new doc"
 
-  batch: (doc) ->
+  batch: (doc)->
     path = "/#{@name}?batch=ok"
     @cot.jsonRequest('POST', path, doc)
-    .then (res) ->
+    .then (res)->
       if res.statusCode is 202 then res.body
       else if doc._id
         throwformattedErr res, "error batch posting doc #{doc._id}"
       else
         throwformattedErr res, "error batch posting new doc"
 
-  update: (docId, fn) ->
+  update: (docId, fn)->
     db = @
     tryIt = ->
       db.get docId
@@ -176,19 +175,19 @@ DbHandle:: =
 
     return tryIt()
 
-  delete: (docId, rev) ->
+  delete: (docId, rev)->
     url = @docUrl(docId) + '?rev=' + encodeURIComponent(rev)
-    @cot.jsonRequest('DELETE', url).then (res) ->
+    @cot.jsonRequest('DELETE', url).then (res)->
       if res.statusCode is 200
         res.body
       else
         throwformattedErr res, "error deleting doc #{docId}"
 
 
-  bulk: (docs) ->
+  bulk: (docs)->
     url = "/#{@name}/_bulk_docs"
     @cot.jsonRequest 'POST', url, {docs: docs}
-    .then (res) ->
+    .then (res)->
       if res.statusCode isnt 201
         throwformattedErr res, "error posting to _bulk_docs"
       else res.body
@@ -196,7 +195,7 @@ DbHandle:: =
   buildQueryString: (query)->
     query ||= {}
     q = {}
-    viewQueryKeys.forEach (key) ->
+    viewQueryKeys.forEach (key)->
       if query[key]?
         if key is 'startkey_docid' or key is 'endkey_docid'
           q[key] = query[key]
@@ -204,42 +203,42 @@ DbHandle:: =
           q[key] = JSON.stringify(query[key])
     return querystring.stringify(q)
 
-  viewQuery: (path, query) ->
+  viewQuery: (path, query)->
     qs = @buildQueryString query
     url = "/#{@name}/#{path}?#{qs}"
     @cot.jsonRequest 'GET', url
-    .then (res) ->
+    .then (res)->
       if res.statusCode isnt 200
         throwformattedErr res, "error reading view #{path}"
       else res.body
 
 
-  view: (designName, viewName, query) ->
+  view: (designName, viewName, query)->
     @viewQuery "_design/#{designName}/_view/#{viewName}", query
 
-  allDocs: (query) ->
+  allDocs: (query)->
     @viewQuery '_all_docs', query
 
-  viewKeysQuery: (path, keys, query) ->
+  viewKeysQuery: (path, keys, query)->
     qs = @buildQueryString query
     url = "/#{@name}/#{path}?#{qs}"
     @cot.jsonRequest 'POST', url, {keys: keys}
-    .then (res) ->
+    .then (res)->
       if res.statusCode isnt 200
         throwformattedErr res, "error reading view #{path}"
       else res.body
 
-  viewKeys: (designName, viewName, keys, query) ->
+  viewKeys: (designName, viewName, keys, query)->
     path = "_design/#{designName}/_view/#{viewName}"
     @viewKeysQuery path, keys, query
 
-  allDocsKeys: (keys, query) ->
+  allDocsKeys: (keys, query)->
     @viewKeysQuery '_all_docs', keys, query
 
-  changes: (query) ->
+  changes: (query)->
     query ||= {}
     q = {}
-    changesQueryKeys.forEach (key) ->
+    changesQueryKeys.forEach (key)->
       if query[key]?
         q[key] = JSON.stringify(query[key])
 
@@ -248,7 +247,7 @@ DbHandle:: =
     path = "/#{@name}/_changes?#{qs}"
 
     @cot.jsonRequest 'GET', path
-    .then (res) ->
+    .then (res)->
       if res.statusCode isnt 200
         throwformattedErr res, "error reading _changes"
       else res.body
