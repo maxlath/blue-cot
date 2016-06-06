@@ -128,15 +128,17 @@ DbHandle:: =
     .then (res)->
       # TODO: remove error checkers like this 404 one
       # has bluereq now make those response be rejections
-      if res.statusCode is 404 then null
-      else if res.statusCode isnt 200
+      if res.statusCode isnt 200
         throwformattedErr res, "error getting doc #{docId}"
-      else res.body
+      else true
+    .catch (err)->
+      if err.statusCode is 404 then false
+      else throw err
 
   put: (doc)->
     @cot.jsonRequest 'PUT', @docUrl(doc._id), doc
     .then (res)->
-      if res.statusCode in [ 200, 201, 409 ]
+      if res.statusCode in [ 200, 201 ]
         res.body
       else
         throwformattedErr res, "error putting doc #{doc._id}"

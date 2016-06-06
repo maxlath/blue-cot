@@ -1,5 +1,4 @@
-chai = require 'chai'
-expect = chai.expect
+{ expect } = require 'chai'
 Cot = require '../cot.coffee'
 config = require './config'
 Promise = require 'bluebird'
@@ -11,13 +10,15 @@ describe 'DbHandle', ->
   db = cot.db config.dbName
 
   beforeEach (done)->
-    cot.jsonRequest 'DELETE', '/' + config.dbName
-    .then -> cot.jsonRequest 'PUT', '/' + config.dbName
+    cot.jsonRequest 'DELETE', "/#{config.dbName}"
+    .then -> cot.jsonRequest 'PUT', "/#{config.dbName}"
     .then ->
       docPromises = []
       i = 1
       while i < 10
-        doc = { _id: 'doc-' + i, key: 'key-' + i }
+        doc =
+          _id: "doc-#{i}"
+          key: "key-#{i}"
         docPromises.push db.post(doc)
         i++
 
@@ -36,10 +37,10 @@ describe 'DbHandle', ->
         key: 'z'
         startkey_docid: 'doc-3'
         endkey_docid: 'doc-6'
-      .then (response)->
-        expect(response.rows.length).to.equal 4
-        expect(response.rows[0].id).to.equal 'doc-3'
-        expect(response.rows[1].id).to.equal 'doc-4'
-        expect(response.rows[2].id).to.equal 'doc-5'
-        expect(response.rows[3].id).to.equal 'doc-6'
+      .then (res)->
+        expect(res.rows.length).to.equal 4
+        expect(res.rows[0].id).to.equal 'doc-3'
+        expect(res.rows[1].id).to.equal 'doc-4'
+        expect(res.rows[2].id).to.equal 'doc-5'
+        expect(res.rows[3].id).to.equal 'doc-6'
       .then -> done()
