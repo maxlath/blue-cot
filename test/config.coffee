@@ -1,11 +1,10 @@
-require 'colors'
 Promise = require('bluebird')
 Promise.config
   warnings: true
   longStackTraces: true
 
 Promise.onPossiblyUnhandledRejection (err) ->
-  console.log 'onPossiblyUnhandledRejection'.red, err
+  console.log 'onPossiblyUnhandledRejection', err
   throw err
 
 exports.serverOpts =
