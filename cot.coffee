@@ -241,8 +241,7 @@ DbHandle:: =
     query ||= {}
     q = {}
     changesQueryKeys.forEach (key)->
-      if query[key]?
-        q[key] = JSON.stringify(query[key])
+      if query[key]? then q[key] = query[key]
 
     if query.longpoll then q.feed = 'longpoll'
     qs = querystring.stringify q
