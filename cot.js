@@ -272,7 +272,7 @@
       q = {};
       changesQueryKeys.forEach(function(key) {
         if (query[key] != null) {
-          return q[key] = JSON.stringify(query[key]);
+          return q[key] = query[key];
         }
       });
       if (query.longpoll) {
