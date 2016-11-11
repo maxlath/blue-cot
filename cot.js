@@ -34,7 +34,7 @@
 
   viewQueryKeys = ['descending', 'endkey', 'endkey_docid', 'group', 'group_level', 'include_docs', 'inclusive_end', 'key', 'limit', 'reduce', 'skip', 'stale', 'startkey', 'startkey_docid', 'update_seq'];
 
-  changesQueryKeys = ['filter', 'include_docs', 'limit', 'since', 'timeout'];
+  changesQueryKeys = ['filter', 'include_docs', 'limit', 'since', 'timeout', 'descending', 'heartbeat', 'style'];
 
   Cot.prototype = {
     jsonRequest: function(method, path, body) {
