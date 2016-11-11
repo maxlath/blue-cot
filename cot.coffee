@@ -55,6 +55,11 @@ changesQueryKeys = [
   'limit'
   'since'
   'timeout'
+  'descending'
+  'heartbeat'
+  'style'
+  # Not including feed as a possible option as it doesn't play well with promises
+  # 'feed'
 ]
 
 Cot:: =
