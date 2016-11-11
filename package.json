@@ -16,7 +16,7 @@
     "benchmark": "coffee benchmark/benchmark.coffee",
     "prepublish": "npm build && npm test"
   },
-  "version": "2.0.8",
+  "version": "2.0.9",
   "main": "cot.js",
   "dependencies": {
     "bluereq": "^2.1.1"
