@@ -7,7 +7,7 @@ catch404 = (err)->
   else throw err
 
 describe 'DbHandle', ->
-  cot = new Cot config.serverOpts
+  cot = new Cot config.cot
   db = cot.db config.dbName
 
   beforeEach (done)->

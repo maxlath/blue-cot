@@ -6,7 +6,7 @@ Promise = require 'bluebird'
 mapFn = 'function(d) { emit(d.key, null); emit("z", null); }'
 
 describe 'DbHandle', ->
-  cot = new Cot config.serverOpts
+  cot = new Cot config.cot
   db = cot.db config.dbName
 
   beforeEach (done)->
