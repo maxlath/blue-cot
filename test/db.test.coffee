@@ -54,6 +54,12 @@ describe 'DbHandle', ->
         expect(doc.name).to.equal 'Will Conant'
       .then -> done()
 
+    it 'should return a 404 when a doc is missing', (done)->
+      db.get 'missing-doc-id'
+      .catch (err)->
+        expect(err.statusCode).to.equal 404
+        done()
+
   describe '#view', ->
     it 'should return a single row', (done)->
       db.view 'test', 'testView', {}
