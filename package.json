@@ -9,15 +9,15 @@
     "bluebird"
   ],
   "scripts": {
-    "build": "coffee -c cot.coffee",
-    "watch": "coffee -cw cot.coffee",
+    "build": "coffee -o dist -c src",
+    "watch": "coffee -o dist -cw src",
     "test": "mocha --compilers coffee:coffee-script/register",
     "test-watch": "mocha --compilers coffee:coffee-script/register --watch",
     "benchmark": "coffee benchmark/benchmark.coffee",
     "prepublish": "npm build && npm test"
   },
   "version": "2.0.10",
-  "main": "cot.js",
+  "main": "dist/cot.js",
   "dependencies": {
     "bluereq": "^2.1.1"
   },

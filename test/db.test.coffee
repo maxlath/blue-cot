@@ -1,5 +1,5 @@
 { expect } = require 'chai'
-Cot = require '../cot.coffee'
+Cot = require '../src/cot.coffee'
 config = require './config'
 
 catch404 = (err)->

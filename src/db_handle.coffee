@@ -1,112 +1,9 @@
-Cot = (opts)->
-  { port, hostname, user, pass, auth, ssl, hostname, debug } = opts
+querystring = require 'querystring'
 
-  protocol = if ssl then 'https' else 'http'
-  @host = "#{protocol}://#{hostname}:#{port}"
-
-  # adaptor to assure compatibilty with cot-node interface
-  if auth? then [ user, pass ] = auth.split ':'
-  @user = user
-  @pass = pass
-
-  @hostHeader = hostname
-
-  notStandardHttpPort = not ssl and port isnt 80
-  notStandardHttpsPort = ssl and port isnt 443
-  if notStandardHttpPort or notStandardHttpsPort
-    @hostHeader += ':' + port
-
-  # Making sure it's a boolean, defaulting to false
-  @debug = debug is true
-
-  return
-
-DbHandle = (cot, name)->
+module.exports = DbHandle = (cot, name)->
   @cot = cot
   @name = name
   return
-
-querystring = require 'querystring'
-breq = require 'bluereq'
-
-module.exports = Cot
-
-viewQueryKeys = [
-  'descending'
-  'endkey'
-  'endkey_docid'
-  'group'
-  'group_level'
-  'include_docs'
-  'inclusive_end'
-  'key'
-  'limit'
-  'reduce'
-  'skip'
-  'stale'
-  'startkey'
-  'startkey_docid'
-  'update_seq'
-]
-
-changesQueryKeys = [
-  'filter'
-  'include_docs'
-  'limit'
-  'since'
-  'timeout'
-  'descending'
-  'heartbeat'
-  'style'
-  # Not including feed as a possible option as it doesn't play well with promises
-  # 'feed'
-]
-
-Cot:: =
-  jsonRequest: (method, path, body)->
-    headers =
-      accept: 'application/json'
-      host: @hostHeader
-
-    params =
-      url: "#{@host}#{path}"
-      headers: headers
-
-    if body?
-      headers['content-type'] = 'application/json'
-      params.body = body
-
-    if @debug
-      # stringify the body to make it copy-pastable for curl
-      bodyStr = JSON.stringify(body) or ''
-      console.log '[cot debug] jsonRequest\n', method, params.url, bodyStr
-
-    if @user? and @pass?
-      params.auth =
-        user: @user
-        pass: @pass
-
-    verb = method.toLowerCase()
-
-    return breq[verb](params)
-
-  db: (name)-> new DbHandle(this, name)
-
-throwformattedErr = (res, message)->
-  { statusCode, body } = res
-  message += ": #{statusCode}"
-
-  try bodyStr = JSON.stringify body
-  catch err
-    console.log "couldn't parse body".yellow
-    bodyStr = body
-
-  if bodyStr? then message += " - #{bodyStr}"
-
-  err = new Error message
-  err.status = res.statusCode
-  err.context = res.body
-  throw err
 
 DbHandle:: =
   docUrl: (docId)->
@@ -243,7 +140,7 @@ DbHandle:: =
     @viewKeysQuery '_all_docs', keys, query
 
   changes: (query)->
-    query ||= {}
+    query or= {}
     q = {}
     changesQueryKeys.forEach (key)->
       if query[key]? then q[key] = query[key]
@@ -257,3 +154,50 @@ DbHandle:: =
       if res.statusCode isnt 200
         throwformattedErr res, "error reading _changes"
       else res.body
+
+viewQueryKeys = [
+  'descending'
+  'endkey'
+  'endkey_docid'
+  'group'
+  'group_level'
+  'include_docs'
+  'inclusive_end'
+  'key'
+  'limit'
+  'reduce'
+  'skip'
+  'stale'
+  'startkey'
+  'startkey_docid'
+  'update_seq'
+]
+
+changesQueryKeys = [
+  'filter'
+  'include_docs'
+  'limit'
+  'since'
+  'timeout'
+  'descending'
+  'heartbeat'
+  'style'
+  # Not including feed as a possible option as it doesn't play well with promises
+  # 'feed'
+]
+
+throwformattedErr = (res, message)->
+  { statusCode, body } = res
+  message += ": #{statusCode}"
+
+  try bodyStr = JSON.stringify body
+  catch err
+    console.log "couldn't parse body".yellow
+    bodyStr = body
+
+  if bodyStr? then message += " - #{bodyStr}"
+
+  err = new Error message
+  err.status = res.statusCode
+  err.context = res.body
+  throw err

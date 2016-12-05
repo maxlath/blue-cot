@@ -1,5 +1,5 @@
 { expect } = require 'chai'
-Cot = require '../cot.coffee'
+Cot = require '../src/cot.coffee'
 
 describe 'Cot', ->
   it 'should include port in host header when port not default for protocol', ->
