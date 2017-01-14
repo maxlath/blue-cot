@@ -71,3 +71,5 @@ const db = getDbApi('some-db-name', 'some-design-doc-name')
 * viewByKeys
 
 see [lib/view_functions](https://github.com/inventaire/blue-cot/blob/master/lib/view_functions.js)
+
+If you find this module useful, consider making a PR to improve the documentation
