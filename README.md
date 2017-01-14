@@ -37,7 +37,7 @@ const getDbApi = bluecot(config)
 const db = getDbApi('some-db-name')
 ```
 
-### [API Reference](https://github.com/willconant/cot-node#promise--dbinfo)
+### [Common API Reference](https://github.com/willconant/cot-node#promise--dbinfo)
 Those are the same than for `cot-node`. Just remember this difference in error handling: here, `4xx` and `5xx` responses from CouchDB will return rejected promises (should be handled with `.catch`)
 * docUrl
 * info
@@ -57,6 +57,17 @@ Those are the same than for `cot-node`. Just remember this difference in error h
 * viewKeys
 * allDocsKeys
 * changes
+
+#### Specific API
+* [fetch](https://github.com/maxlath/blue-cot/blob/0466f2e19b7f337d90bd7725666fb4d1d3a77364/lib/db_handle.js#L180-L182): takes doc ids, returns docs
+```js
+db.fetch([ 'doc-1', 'doc-2', 'doc-3' ])
+.then(function (docs) {
+  docs[0]._id === 'doc-1' // true
+  docs[1]._id === 'doc-2' // true
+  docs[2]._id === 'doc-3' // true
+})
+```
 
 ### View functions
 To access those, pass a design doc name as second argument
