@@ -6,7 +6,8 @@ describe('cot', function () {
     const dbHandler = cot({ port: 80, hostname: 'foo' })
     dbHandler.should.be.a.Function()
     const db = dbHandler('bar')
-    Object.keys(db).length.should.equal(dbHanlderFunctions.length)
+    db.name.should.equal('bar')
+    Object.keys(db).length.should.equal(dbKeys.length)
     dbHanlderFunctions.forEach(function (fnName) {
       db[fnName].should.be.a.Function()
     })
@@ -14,8 +15,8 @@ describe('cot', function () {
 
   it('should return an db handler extended with view functions when passed a db name and a design doc name', function () {
     const db = cot({ port: 80, hostname: 'foo' })('bar', 'buzz')
-    Object.keys(db).length.should.equal(withViewFunctions.length)
-    withViewFunctions.forEach(function (fnName) {
+    Object.keys(db).length.should.equal(dbKeysWithViewFunctions.length)
+    dbHanlderFunctionsWithViewFunctions.forEach(function (fnName) {
       db[fnName].should.be.a.Function()
     })
   })
@@ -56,10 +57,15 @@ const dbHanlderFunctions = [
   'jsonRequest'
 ]
 
-const withViewFunctions = dbHanlderFunctions.concat([
+const viewFunctions = [
   'viewCustom',
   'viewByKeysCustom',
   'viewByKey',
   'viewFindOneByKey',
   'viewByKeys'
-])
+]
+
+const dbHanlderFunctionsWithViewFunctions = dbHanlderFunctions.concat(viewFunctions)
+
+const dbKeys = [ 'name' ].concat(dbHanlderFunctions)
+const dbKeysWithViewFunctions = [ 'name', 'designDoc' ].concat(dbHanlderFunctions, viewFunctions)
