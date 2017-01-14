@@ -1,6 +1,9 @@
 # CHANGELOG
 *versions follow [SemVer](http://semver.org)*
 
+## 3.1.0 - 2017-01-14
+* Added `db.fetch`
+
 ## 3.0.0 - 2017-01-14
 * Breaking change: removing constructors in favor of factory functions, breaking the module interface (see [Initialization](https://github.com/maxlath/blue-cot#initialization))
 * New feature: [View functions](https://github.com/maxlath/blue-cot#view-functions)
