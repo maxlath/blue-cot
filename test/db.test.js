@@ -10,6 +10,14 @@ const catch404 = function (err) {
   }
 }
 
+const putSecurityDoc = function (db) {
+  const doc = {
+    admins: { names: [ config.cot.user ] },
+    members: { names: [ config.cot.user ] }
+  }
+  return db.jsonRequest('PUT', `/${config.dbName}/_security`, doc)
+}
+
 describe('DbHandle', function () {
   const db = cot(config.cot)(config.dbName)
 
@@ -17,6 +25,9 @@ describe('DbHandle', function () {
     db.jsonRequest('DELETE', `/${config.dbName}`)
     .catch(catch404)
     .then(() => db.jsonRequest('PUT', `/${config.dbName}`))
+    .then(function () {
+      if (config.cot.user) return putSecurityDoc(db)
+    })
     .then(function () {
       return db.post({
         _id: 'person-1',
