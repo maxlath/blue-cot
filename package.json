@@ -14,7 +14,7 @@
     "lint": "standard",
     "prepublish": "npm build && npm test"
   },
-  "version": "2.0.10",
+  "version": "3.0.0",
   "main": "lib/cot.js",
   "dependencies": {
     "bluereq": "^2.1.1"
