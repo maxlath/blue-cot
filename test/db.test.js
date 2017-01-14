@@ -200,4 +200,42 @@ describe('DbHandle', function () {
       })
     })
   })
+
+  describe('#bulk', function () {
+    it('should post all the passed docs', function (done) {
+      db.bulk([
+        { _id: 'person-2', type: 'person', name: 'Bobby Lapointe' },
+        { _id: 'person-3', type: 'person', name: 'Jean Valjean' },
+        { _id: 'person-4', type: 'person', name: 'Rose Tyler' }
+      ])
+      .then(function (res) {
+        res.length.should.equal(3)
+        res.should.be.an.Array()
+        res[0].id.should.equal('person-2')
+        res[1].id.should.equal('person-3')
+        res[2].id.should.equal('person-4')
+        done()
+      })
+    })
+  })
+
+  describe('#fetch', function () {
+    it('should return all the docs requested', function (done) {
+      db.bulk([
+        { _id: 'person-2', type: 'person', name: 'Bobby Lapointe' },
+        { _id: 'person-3', type: 'person', name: 'Jean Valjean' },
+        { _id: 'person-4', type: 'person', name: 'Rose Tyler' }
+      ])
+      .then(function (res) {
+        db.fetch([ 'person-2', 'person-4' ])
+        .then(function (res) {
+          res.should.be.an.Array()
+          res.length.should.equal(2)
+          res[0]._id.should.equal('person-2')
+          res[1]._id.should.equal('person-4')
+          done()
+        })
+      })
+    })
+  })
 })

@@ -53,6 +53,7 @@ const dbHanlderFunctions = [
   'viewKeysQuery',
   'viewKeys',
   'allDocsKeys',
+  'fetch',
   'changes',
   'jsonRequest'
 ]
