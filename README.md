@@ -58,7 +58,7 @@ Those are the same than for `cot-node`. Just remember this difference in error h
 * allDocsKeys
 * changes
 
-### View functions goodies
+### View functions
 To access those, pass a design doc name as second argument
 ```js
 const db = getDbApi('some-db-name', 'some-design-doc-name')
