@@ -1,18 +1,38 @@
-[Bluebird](https://github.com/petkaantonov/bluebird)-based [Cot](https://github.com/willconant/cot-node) fork
+[CouchDB](http://couchdb.org/) library with a simple, functional-programing-friendly API, returning [Bluebird](https://github.com/petkaantonov/bluebird) promise.
 
-# Installing
+Forked from [Cot](https://github.com/willconant/cot-node)
+
+## Summary
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Installing](#installing)
+- [Differences with Cot](#differences-with-cot)
+- [Initialization](#initialization)
+  - [Common API](#common-api)
+  - [Specific API](#specific-api)
+    - [Additional database functions](#additional-database-functions)
+    - [View functions](#view-functions)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Installing
+
 ```
 npm install blue-cot
 ```
 
 ## Differences with [Cot](https://github.com/willconant/cot-node)
+
 * Returns [Bluebird](https://github.com/petkaantonov/bluebird) promises
 * Class-less, thus a different initialization, but the rest of the API stays the same
 * Consequently, `blue-cot` is `this`-free: no need to bind functions contexts!
 * `4xx` and `5xx` responses will return rejected promises (should be handled with `.catch`)
 * Adds [some view functions goodies](https://github.com/inventaire/blue-cot/blob/master/lib/view_functions.js)
 
-### Initialization
+## Initialization
+
 ```js
 const bluecot = require('blue-cot')
 const config = {
@@ -37,7 +57,11 @@ const getDbApi = bluecot(config)
 const db = getDbApi('some-db-name')
 ```
 
-### [Common API Reference](https://github.com/willconant/cot-node#promise--dbinfo)
+## API
+
+### Common API
+[Cot API Documentation](https://github.com/willconant/cot-node#promise--dbinfo)
+
 Those are the same than for `cot-node`. Just remember this difference in error handling: here, `4xx` and `5xx` responses from CouchDB will return rejected promises (should be handled with `.catch`)
 * docUrl
 * info
@@ -58,8 +82,12 @@ Those are the same than for `cot-node`. Just remember this difference in error h
 * allDocsKeys
 * changes
 
-#### Specific API
-* [fetch](https://github.com/maxlath/blue-cot/blob/0466f2e19b7f337d90bd7725666fb4d1d3a77364/lib/db_handle.js#L180-L182): takes doc ids, returns docs
+### Specific API
+
+#### Additional database functions
+##### fetch
+
+takes doc ids, returns docs
 ```js
 db.fetch([ 'doc-1', 'doc-2', 'doc-3' ])
 .then(function (docs) {
@@ -69,17 +97,18 @@ db.fetch([ 'doc-1', 'doc-2', 'doc-3' ])
 })
 ```
 
-### View functions
+#### View functions
+
 To access those, pass a design doc name as second argument
 ```js
 const db = getDbApi('some-db-name', 'some-design-doc-name')
 ```
 
-* viewCustom
-* viewByKeysCustom
-* viewByKey
-* viewFindOneByKey
-* viewByKeys
+##### viewCustom
+##### viewByKeysCustom
+##### viewByKey
+##### viewFindOneByKey
+##### viewByKeys
 
 see [lib/view_functions](https://github.com/inventaire/blue-cot/blob/master/lib/view_functions.js)
 
