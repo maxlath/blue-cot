@@ -8,6 +8,7 @@ npm install blue-cot
 ## Differences with [Cot](https://github.com/willconant/cot-node)
 * Returns [Bluebird](https://github.com/petkaantonov/bluebird) promises
 * Class-less, thus a different initialization, but the rest of the API stays the same
+* Consequently, `blue-cot` is `this`-free: no need to bind functions contexts!
 * `4xx` and `5xx` responses will return rejected promises (should be handled with `.catch`)
 * Adds [some view functions goodies](https://github.com/inventaire/blue-cot/blob/master/lib/view_functions.js)
 
