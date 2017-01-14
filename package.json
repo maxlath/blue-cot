@@ -12,7 +12,7 @@
     "test": "mocha",
     "test-watch": "mocha --watch",
     "lint": "standard",
-    "prepublish": "npm lint && npm test"
+    "prepublish": "npm run lint && npm test"
   },
   "version": "3.0.0",
   "main": "lib/cot.js",
