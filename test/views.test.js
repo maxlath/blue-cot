@@ -1,4 +1,4 @@
-require('should')
+const should = require('should')
 const cot = require('../lib/cot')
 const config = require('./config')
 global.Promise = require('bluebird')
@@ -6,7 +6,7 @@ global.Promise = require('bluebird')
 const mapFn = 'function(d) { emit(d.key, null); emit("z", null); }'
 
 describe('DbHandle', function () {
-  const db = cot(config.cot)(config.dbName)
+  const db = cot(config.cot)(config.dbName, 'test')
 
   beforeEach(function (done) {
     return db.jsonRequest('DELETE', `/${config.dbName}`)
@@ -54,6 +54,24 @@ describe('DbHandle', function () {
         res.rows[3].id.should.equal('doc-6')
       })
       .then(() => done())
+    })
+  })
+
+  describe('#viewFindOneByKey', function () {
+    it('should return a unique doc', function (done) {
+      db.viewFindOneByKey('testView', 'key-1')
+      .then(function (doc) {
+        doc._id.should.equal('doc-1')
+        done()
+      })
+    })
+
+    it('should return a formatted error', function (done) {
+      db.viewFindOneByKey('testView', 'notexisting')
+      .catch(function (err) {
+        should(err.statusCode).be.ok()
+        done()
+      })
     })
   })
 })
