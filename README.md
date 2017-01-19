@@ -1,4 +1,4 @@
-[CouchDB](http://couchdb.org/) library with a simple, functional-programing-friendly API, returning [Bluebird](https://github.com/petkaantonov/bluebird) promise.
+[CouchDB](http://couchdb.org/) library with a simple, functional-programing-friendly API, returning [Bluebird](https://github.com/petkaantonov/bluebird) promises.
 
 Forked from [Cot](https://github.com/willconant/cot-node)
 
