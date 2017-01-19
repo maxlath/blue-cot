@@ -70,6 +70,7 @@ describe('DbHandle', function () {
       db.viewFindOneByKey('testView', 'notexisting')
       .catch(function (err) {
         should(err.statusCode).be.ok()
+        should(err.context).be.ok()
         done()
       })
     })
