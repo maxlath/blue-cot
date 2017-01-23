@@ -1,6 +1,9 @@
 # CHANGELOG
 *versions follow [SemVer](http://semver.org)*
 
+## 3.3.0 - 2017-01-23
+* Added [`db.revertToLastVersionWhere`](https://github.com/maxlath/blue-cot#reverttolastversionwhere)
+
 ## 3.2.0 - 2017-01-23
 * Added [`db.listRevs`](https://github.com/maxlath/blue-cot#listrevs)
 * Added [`db.revertLastChange`](https://github.com/maxlath/blue-cot#revertlastchange)
