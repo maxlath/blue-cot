@@ -41,6 +41,7 @@ const dbHanlderFunctions = [
   'viewKeys',
   'allDocsKeys',
   'fetch',
+  'listRevs',
   'changes',
   'jsonRequest'
 ]
