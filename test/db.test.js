@@ -282,6 +282,7 @@ describe('DbHandle', function () {
           lastVersion._rev.should.not.equal(previousVersion._rev)
           lastVersion.foo.should.not.equal(previousVersion.foo)
           db.revertLastChange('person-1')
+          .then((res) => res.revert.should.equal(previousVersion._rev))
           .then(getCurrentDoc)
           .then(function (restoredVersion) {
             lastVersion.foo.should.not.equal(restoredVersion.foo)
@@ -297,6 +298,35 @@ describe('DbHandle', function () {
       .catch(function (err) {
         err.message.should.equal('no previous version could be found')
         done()
+      })
+    })
+  })
+
+  describe('#revertToLastVersionWhere', function () {
+    it('should revert to the last matching version', function (done) {
+      db.revertToLastVersionWhere.should.be.a.Function()
+
+      db.update('person-1', randomUpdate)
+      .then(() => db.update('person-1', function (doc) {
+        doc.foo = 2
+        return doc
+      }))
+      .then(function (res) {
+        const targetRev = res.rev
+        db.update('person-1', randomUpdate)
+        .then(() => db.update('person-1', randomUpdate))
+        .then(() => db.update('person-1', randomUpdate))
+        .then(() => {
+          db.revertToLastVersionWhere('person-1', (doc) => doc.foo === 2)
+          .then((res) => {
+            res.revert.should.equal(targetRev)
+            db.get('person-1')
+            .then(function (doc) {
+              doc.foo.should.equal(2)
+              done()
+            })
+          })
+        })
       })
     })
   })

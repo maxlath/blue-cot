@@ -43,6 +43,7 @@ const dbHanlderFunctions = [
   'fetch',
   'listRevs',
   'revertLastChange',
+  'revertToLastVersionWhere',
   'changes',
   'jsonRequest'
 ]

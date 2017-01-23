@@ -19,6 +19,7 @@ Forked from [Cot](https://github.com/willconant/cot-node)
       - [fetch](#fetch)
       - [listRevs](#listrevs)
       - [revertLastChange](#revertlastchange)
+      - [revertToLastVersionWhere](#reverttolastversionwhere)
     - [View functions](#view-functions)
       - [viewCustom](#viewcustom)
       - [viewByKeysCustom](#viewbykeyscustom)
@@ -149,9 +150,17 @@ It doesn't delete the last version, it simply creates a new version that is exac
 
 ```js
 db.revertLastChange('doc-1')
-.then(function (res) {
-  // celebrate
-})
+```
+
+##### revertToLastVersionWhere
+
+Takes a doc id and a function, and reverts to the last version returning a truthy result when passed through this function.
+Same warnings apply as for `revertLastChange`.
+
+```js
+const desiredVersionTestFunction = (doc) => doc.foo === 2
+
+db.revertToLastVersionWhere('doc-1', desiredVersionTestFunction)
 ```
 
 #### View functions
