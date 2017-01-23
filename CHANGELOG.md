@@ -1,7 +1,14 @@
 # CHANGELOG
 *versions follow [SemVer](http://semver.org)*
 
+## 3.2.0 - 2017-01-23
+* Added [`db.listRevs`](https://github.com/maxlath/blue-cot#listrevs)
+* Added [`db.revertLastChange`](https://github.com/maxlath/blue-cot#revertlastchange)
+* Added `db.revertLastChange`
+* `db.get` accepts a `rev` id as second parameter
+
 ## 3.1.0 - 2017-01-14
+* Added [`db.fetch`](https://github.com/maxlath/blue-cot#fetch)
 * Added `db.fetch`
 
 ## 3.0.0 - 2017-01-14
