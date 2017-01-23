@@ -42,6 +42,7 @@ const dbHanlderFunctions = [
   'allDocsKeys',
   'fetch',
   'listRevs',
+  'revertLastChange',
   'changes',
   'jsonRequest'
 ]

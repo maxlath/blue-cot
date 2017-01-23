@@ -90,6 +90,18 @@ describe('DbHandle', function () {
         done()
       })
     })
+
+    it('should return a specific version when passed a rev', function (done) {
+      db.get('person-1')
+      .then(function (firstVersion) {
+        db.update('person-1', randomUpdate)
+        .then(() => db.get('person-1', firstVersion._rev))
+        .then(function (specificVersion) {
+          specificVersion.should.deepEqual(firstVersion)
+          done()
+        })
+      })
+    })
   })
 
   describe('#view', function () {
@@ -240,10 +252,6 @@ describe('DbHandle', function () {
   })
 
   describe('#list-revs', function () {
-    const randomUpdate = function (doc) {
-      doc.foo = Math.random()
-      return doc
-    }
     it('should return all the doc revs', function (done) {
       db.listRevs.should.be.a.Function()
       db.update('person-1', randomUpdate)
@@ -259,4 +267,42 @@ describe('DbHandle', function () {
       })
     })
   })
+
+  describe('#revertLastChange', function () {
+    it('should revert to the previous version', function (done) {
+      db.revertLastChange.should.be.a.Function()
+      const getCurrentDoc = () => db.get('person-1')
+
+      db.update('person-1', randomUpdate)
+      .then(getCurrentDoc)
+      .then(function (previousVersion) {
+        db.update('person-1', randomUpdate)
+        .then(getCurrentDoc)
+        .then(function (lastVersion) {
+          lastVersion._rev.should.not.equal(previousVersion._rev)
+          lastVersion.foo.should.not.equal(previousVersion.foo)
+          db.revertLastChange('person-1')
+          .then(getCurrentDoc)
+          .then(function (restoredVersion) {
+            lastVersion.foo.should.not.equal(restoredVersion.foo)
+            restoredVersion.foo.should.equal(previousVersion.foo)
+            done()
+          })
+        })
+      })
+    })
+
+    it('should reject when no previous rev can be found', function (done) {
+      db.revertLastChange('person-1')
+      .catch(function (err) {
+        err.message.should.equal('no previous version could be found')
+        done()
+      })
+    })
+  })
 })
+
+const randomUpdate = function (doc) {
+  doc.foo = Math.random()
+  return doc
+}

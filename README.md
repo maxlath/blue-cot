@@ -13,9 +13,12 @@ Forked from [Cot](https://github.com/willconant/cot-node)
 - [API](#api)
   - [Common API](#common-api)
   - [Specific API](#specific-api)
+    - [Extended functions](#extended-functions)
+      - [get](#get)
     - [Additional database functions](#additional-database-functions)
       - [fetch](#fetch)
-      - [list revs](#list-revs)
+      - [listRevs](#listrevs)
+      - [revertLastChange](#revertlastchange)
     - [View functions](#view-functions)
       - [viewCustom](#viewcustom)
       - [viewByKeysCustom](#viewbykeyscustom)
@@ -37,7 +40,7 @@ npm install blue-cot
 * Class-less, thus a different initialization, but the rest of the API stays the same
 * Consequently, `blue-cot` is `this`-free: no need to bind functions contexts!
 * `4xx` and `5xx` responses will return rejected promises (should be handled with `.catch`)
-* Adds [some view functions goodies](https://github.com/inventaire/blue-cot/blob/master/lib/view_functions.js)
+* Adds [a few new functions](#specific-api), notably [some view functions goodies](https://github.com/inventaire/blue-cot/blob/master/lib/view_functions.js)
 
 ## Initialization
 
@@ -92,10 +95,25 @@ Those are the same than for `cot-node`. Just remember this difference in error h
 
 ### Specific API
 
+#### Extended functions
+##### get
+Takes a document id and optionaly a rev id to get a specific version:
+```js
+db.get('doc-1')
+.then(function (lastDocVersion) {
+  // do something
+})
+
+db.get('doc-1', '2-b8476e8877ff5707de9e62e70a8e0aeb')
+.then(function (specificVersion) {
+  // doc._rev === '2-b8476e8877ff5707de9e62e70a8e0aeb'
+})
+```
+
 #### Additional database functions
 ##### fetch
 
-takes doc ids, returns docs
+Takes doc ids, returns docs
 ```js
 db.fetch([ 'doc-1', 'doc-2', 'doc-3' ])
 .then(function (docs) {
@@ -105,9 +123,9 @@ db.fetch([ 'doc-1', 'doc-2', 'doc-3' ])
 })
 ```
 
-##### list revs
+##### listRevs
 
-takes a doc id, returns the doc's rev infos
+Takes a doc id, returns the doc's rev infos
 ```js
 db.listRevs('doc-1')
 .then(function (revsInfo) {
@@ -121,6 +139,19 @@ db.listRevs('doc-1')
   { rev: '2-88476e8877ff5707de9e62e70a8e0aeb', status: 'available' },
   { rev: '1-a8bdf0ef0b7049d35c781210723b9ff9', status: 'available' }
 ]
+```
+
+##### revertLastChange
+
+Takes a doc id and reverts its last change, recovering the previous version.
+Only works if there is a previous version and if it is still available in the database (that is, if it wasn't deleted by a database compaction).
+It doesn't delete the last version, it simply creates a new version that is exactly like the version before the current one.
+
+```js
+db.revertLastChange('doc-1')
+.then(function (res) {
+  // celebrate
+})
 ```
 
 #### View functions
