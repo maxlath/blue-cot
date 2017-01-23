@@ -238,4 +238,25 @@ describe('DbHandle', function () {
       })
     })
   })
+
+  describe('#list-revs', function () {
+    const randomUpdate = function (doc) {
+      doc.foo = Math.random()
+      return doc
+    }
+    it('should return all the doc revs', function (done) {
+      db.listRevs.should.be.a.Function()
+      db.update('person-1', randomUpdate)
+      .then(() => db.update('person-1', randomUpdate))
+      .then(function (res) {
+        db.listRevs('person-1')
+        .then(function (res) {
+          res.should.be.an.Array()
+          res[0].rev.split('-')[0].should.equal('3')
+          res[0].status.should.equal('available')
+          done()
+        })
+      })
+    })
+  })
 })

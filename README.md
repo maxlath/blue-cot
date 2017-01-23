@@ -10,10 +10,18 @@ Forked from [Cot](https://github.com/willconant/cot-node)
 - [Installing](#installing)
 - [Differences with Cot](#differences-with-cot)
 - [Initialization](#initialization)
+- [API](#api)
   - [Common API](#common-api)
   - [Specific API](#specific-api)
     - [Additional database functions](#additional-database-functions)
+      - [fetch](#fetch)
+      - [list revs](#list-revs)
     - [View functions](#view-functions)
+      - [viewCustom](#viewcustom)
+      - [viewByKeysCustom](#viewbykeyscustom)
+      - [viewByKey](#viewbykey)
+      - [viewFindOneByKey](#viewfindonebykey)
+      - [viewByKeys](#viewbykeys)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -95,6 +103,24 @@ db.fetch([ 'doc-1', 'doc-2', 'doc-3' ])
   docs[1]._id === 'doc-2' // true
   docs[2]._id === 'doc-3' // true
 })
+```
+
+##### list revs
+
+takes a doc id, returns the doc's rev infos
+```js
+db.listRevs('doc-1')
+.then(function (revsInfo) {
+  // do your thing
+})
+```
+`revsInfo` will look something like:
+```
+[
+  { rev: '3-6a8869bc7fff815987ff9b7fda3e10e3', status: 'available' },
+  { rev: '2-88476e8877ff5707de9e62e70a8e0aeb', status: 'available' },
+  { rev: '1-a8bdf0ef0b7049d35c781210723b9ff9', status: 'available' }
+]
 ```
 
 #### View functions
