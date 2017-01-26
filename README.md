@@ -20,6 +20,7 @@ Forked from [Cot](https://github.com/willconant/cot-node)
       - [listRevs](#listrevs)
       - [revertLastChange](#revertlastchange)
       - [revertToLastVersionWhere](#reverttolastversionwhere)
+      - [undelete](#undelete)
     - [View functions](#view-functions)
       - [viewCustom](#viewcustom)
       - [viewByKeysCustom](#viewbykeyscustom)
@@ -162,6 +163,16 @@ const desiredVersionTestFunction = (doc) => doc.foo === 2
 
 db.revertToLastVersionWhere('doc-1', desiredVersionTestFunction)
 ```
+
+##### undelete
+Mistakes happen
+```js
+db.delete(docId, docRev)
+.then(res => db.undelete(docId))
+.then(res => db.get(docId))
+.then(restoredDoc => // celebrate)
+```
+:alert: this will obviously not work if the version before deletion isn't in the database (because the database was compressed or it's a freshly replicated database), or if the database was purged from deleted documents
 
 #### View functions
 

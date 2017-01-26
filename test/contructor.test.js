@@ -32,6 +32,7 @@ const dbHanlderFunctions = [
   'batch',
   'update',
   'delete',
+  'undelete',
   'bulk',
   'buildQueryString',
   'viewQuery',

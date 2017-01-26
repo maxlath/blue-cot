@@ -104,6 +104,78 @@ describe('DbHandle', function () {
     })
   })
 
+  describe('#delete', function () {
+    it('should delete a document', function (done) {
+      db.get('person-1')
+      .then(function (doc) {
+        db.delete('person-1', doc._rev)
+        .then(function () {
+          db.get('person-1')
+          .catch(function (err) {
+            err.statusCode.should.equal(404)
+            done()
+          })
+        })
+      })
+    })
+  })
+  describe('#undelete', function () {
+    it('should undelete a document', function (done) {
+      db.undelete.should.be.a.Function()
+      const docId = 'person-1'
+      db.get(docId)
+      .then(function (originalDoc) {
+        db.delete(docId, originalDoc._rev)
+        .then(res => db.undelete(docId))
+        .then(res => db.get(docId))
+        .then(function (restoredDoc) {
+          delete originalDoc._rev
+          delete restoredDoc._rev
+          originalDoc.should.deepEqual(restoredDoc)
+          done()
+        })
+      })
+    })
+    it('should throw when asked to delete a non deleted document', function (done) {
+      const docId = 'person-1'
+      // updating so that there is more than one rev
+      db.update(docId, randomUpdate)
+      .then((res) => db.undelete(docId))
+      .catch(function (err) {
+        err.message.should.equal("can't undelete an non-deleted document")
+        done()
+      })
+    })
+    it('should be able to undelete several times the same doc', function (done) {
+      db.undelete.should.be.a.Function()
+      const docId = 'person-1'
+      db.get(docId)
+      .then(function (originalDoc) {
+        // First delete
+        db.delete(docId, originalDoc._rev)
+        // First undelete
+        .then(res => db.undelete(docId))
+        .then(res => db.get(docId))
+        .then(function (restoredDoc) {
+          const currentRev = restoredDoc._rev
+          delete originalDoc._rev
+          delete restoredDoc._rev
+          originalDoc.should.deepEqual(restoredDoc)
+          // Second delete
+          db.delete(docId, currentRev)
+          // Second undelete
+          .then(res => db.undelete(docId))
+          .then(res => db.get(docId))
+          .then(function (restoredDoc) {
+            delete originalDoc._rev
+            delete restoredDoc._rev
+            originalDoc.should.deepEqual(restoredDoc)
+            done()
+          })
+        })
+      })
+    })
+  })
   describe('#view', function () {
     it('should return a single row', function (done) {
       db.view('test', 'testView', {})
