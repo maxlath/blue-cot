@@ -172,7 +172,7 @@ db.delete(docId, docRev)
 .then(res => db.get(docId))
 .then(restoredDoc => // celebrate)
 ```
-:alert: this will obviously not work if the version before deletion isn't in the database (because the database was compressed or it's a freshly replicated database), or if the database was purged from deleted documents
+:warning: this will obviously not work if the version before deletion isn't in the database (because the database was compressed or it's a freshly replicated database), or if the database was purged from deleted documents.
 
 #### View functions
 
