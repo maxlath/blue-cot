@@ -8,25 +8,41 @@ Forked from [Cot](https://github.com/willconant/cot-node)
 
 
 - [Installing](#installing)
-- [Differences with Cot](#differences-with-cot)
+- [Specificities of this lib](#specificities-of-this-lib)
 - [Initialization](#initialization)
 - [API](#api)
-  - [Common API](#common-api)
-  - [Specific API](#specific-api)
-    - [Extended functions](#extended-functions)
-      - [get](#get)
-    - [Additional database functions](#additional-database-functions)
-      - [fetch](#fetch)
-      - [listRevs](#listrevs)
-      - [revertLastChange](#revertlastchange)
-      - [revertToLastVersionWhere](#reverttolastversionwhere)
-      - [undelete](#undelete)
-    - [View functions](#view-functions)
+  - [Database functions](#database-functions)
+    - [info](#info)
+  - [Documents functions](#documents-functions)
+    - [get](#get)
+    - [post](#post)
+    - [put](#put)
+    - [delete](#delete)
+    - [exists](#exists)
+    - [batch](#batch)
+    - [update](#update)
+    - [bulk](#bulk)
+    - [allDocs](#alldocs)
+    - [allDocsKeys](#alldocskeys)
+    - [fetch](#fetch)
+    - [changes](#changes)
+    - [listRevs](#listrevs)
+    - [revertLastChange](#revertlastchange)
+    - [revertToLastVersionWhere](#reverttolastversionwhere)
+    - [undelete](#undelete)
+  - [View functions](#view-functions)
+    - [view](#view)
+    - [viewQuery](#viewquery)
+    - [viewKeysQuery](#viewkeysquery)
+    - [viewKeys](#viewkeys)
+    - [Design doc specific view functions](#design-doc-specific-view-functions)
       - [viewCustom](#viewcustom)
       - [viewByKeysCustom](#viewbykeyscustom)
       - [viewByKey](#viewbykey)
       - [viewFindOneByKey](#viewfindonebykey)
       - [viewByKeys](#viewbykeys)
+  - [Utils](#utils)
+    - [buildQueryString](#buildquerystring)
 - [Tips](#tips)
   - [Cookie sessions](#cookie-sessions)
 
@@ -38,7 +54,8 @@ Forked from [Cot](https://github.com/willconant/cot-node)
 npm install blue-cot
 ```
 
-## Differences with [Cot](https://github.com/willconant/cot-node)
+## Specificities of this lib
+Especially compared to [Cot](https://github.com/willconant/cot-node) from which it is forked
 
 * Returns [Bluebird](https://github.com/petkaantonov/bluebird) promises
 * Class-less, thus a different initialization, but the rest of the API stays the same
@@ -74,34 +91,20 @@ const db = getDbApi('some-db-name')
 ```
 
 ## API
+### Database functions
 
-### Common API
-[Cot API Documentation](https://github.com/willconant/cot-node#promise--dbinfo)
+To handle database and design documents creation, see [couch-init2](https://github.com/maxlath/couch-init2)
 
-Those are the same than for `cot-node`. Just remember this difference in error handling: here, `4xx` and `5xx` responses from CouchDB will return rejected promises (should be handled with `.catch`)
-* docUrl
-* info
-* get
-* exists
-* put
-* post
-* batch
-* update
-* delete
-* bulk
-* buildQueryString
-* viewQuery
-* view
-* allDocs
-* viewKeysQuery
-* viewKeys
-* allDocsKeys
-* changes
+#### info
+`GET /<dbName>`
+```js
+const promise = db.info()
+```
 
-### Specific API
+### Documents functions
+#### get
+`GET /<dbName>/<docId>`
 
-#### Extended functions
-##### get
 Takes a document id and optionaly a rev id to get a specific version:
 ```js
 db.get('doc-1')
@@ -115,9 +118,110 @@ db.get('doc-1', '2-b8476e8877ff5707de9e62e70a8e0aeb')
 })
 ```
 
-#### Additional database functions
-##### fetch
+Missing documents are treated as an error, and thus return a rejected promise.
 
+#### post
+`POST /<dbName>`
+```js
+const promise = db.post(doc)
+```
+
+Creates a new document or updates an existing document. If `doc._id` is undefined, CouchDB will generate a new ID for you.
+
+On 201, returns result from CouchDB which looks like: `{"ok":true, "id":"<docId>", "rev":"<docRev>"}`
+
+All other status codes (including 409, conflict) are treated as errors, and thus return a rejected promise.
+
+#### put
+`PUT /<dbName>/<doc._id>`
+```js
+const promise = db.put(doc)
+```
+
+On 409 (conflict) returns result from CouchDB which looks like: `{"error":"conflict"}`
+
+On 201, returns result from CouchDB which looks like: `{"ok":true, "id":"<docId>", "rev":"<docRev>"}`
+
+All other status codes are treated as errors, and thus return a rejected promise.
+
+#### delete
+`DELETE /<dbName>/<docId>?rev=<rev>`
+```js
+const promise = db.delete(docId, rev)
+```
+
+On 200, returns result from CouchDB which looks like: `{"ok":true, "id":"<docId>", "rev":"<docRev>"}`
+
+All other status codes are treated as errors, and thus return a rejected promise.
+
+If you wish to gracefully handle update conflicts while deleting, use `db.put()` on a document with `_deleted` set to `true`:
+```js
+doc._deleted = true
+db.put(doc)
+.then(response => {
+  if (!response.ok) {
+    // there was a conflict
+  }
+})
+```
+
+#### exists
+`GET /<dbName>/<docId>`
+```js
+const promise = db.exists(docId)
+```
+
+Returns a promise resolving to true if it exist, or a rejected promise if it doesn't.
+
+#### batch
+`POST /<dbName>?batch=ok`
+```js
+const promise = db.batch(doc)
+```
+doc: [`Batch Mode`](http://guide.couchdb.org/draft/performance.html#batch)
+
+Creates or updates a document but doesn't wait for success. Conflicts will not be detected.
+
+On 202, returns result from CouchDB which looks like: `{"ok":true, "id":"<docId>"}`
+
+The rev isn't returned because CouchDB returns before checking for conflicts. If there is a conflict, the update will be silently lost.
+
+All other status codes are treated as errors, and thus return a rejected promise.
+
+#### update
+```js
+const promise = db.update(docId, updateFunction)
+```
+Gets the specified document, passes it to `updateFunction`, and then saves the results of `updateFunction` over the document
+
+The process loops if there is an update conflict.
+
+If `updateFunction` needs to do asynchronous work, it may return a promise.
+
+#### bulk
+`POST /<dbName>/_bulk_docs`
+  ```js
+const promise = db.bulk(docs)
+```
+
+See [CouchDB documentation](https://wiki.apache.org/couchdb/HTTP_Bulk_Document_API) for more information
+
+#### allDocs
+`GET /<dbName>/_all_docs?<properly encoded query>`
+```js
+const promise = db.allDocs(query)
+```
+
+Queries the `_all_docs` view. `query` supports the same keys as in [`db.view`](#view).
+
+#### allDocsKeys
+Loads documents with the specified keys and query parameters
+```js
+const promise = db.allDocsKeys(keys, query)
+```
+[Couchdb documentation](http://docs.couchdb.org/en/latest/api/database/bulk-api.html#post--db-_all_docs)
+
+#### fetch
 Takes doc ids, returns docs
 ```js
 db.fetch([ 'doc-1', 'doc-2', 'doc-3' ])
@@ -128,7 +232,20 @@ db.fetch([ 'doc-1', 'doc-2', 'doc-3' ])
 })
 ```
 
-##### listRevs
+(That's pretty much the same thing as `db.allDocsKeys` but with the query object set to `{ include_docs: true }`)
+
+#### changes
+Queries the changes feed given the specified query. `query` may contain the following keys:
+* `filter`: filter function to use
+* `include_docs`: if true, results will contain entire document
+* `limit`: the maximum number of change rows this query should return
+* `since`: results will start immediately after the sequence number provided here
+* `longpoll`: if true, query will send feed=longpoll
+* `timeout`: timeout in milliseconds for logpoll queries
+
+See [CouchDB changes feed documentation](http://wiki.apache.org/couchdb/HTTP_database_API#Changes)
+
+#### listRevs
 
 Takes a doc id, returns the doc's rev infos
 ```js
@@ -146,7 +263,7 @@ db.listRevs('doc-1')
 ]
 ```
 
-##### revertLastChange
+#### revertLastChange
 
 Takes a doc id and reverts its last change, recovering the previous version.
 Only works if there is a previous version and if it is still available in the database (that is, if it wasn't deleted by a database compaction).
@@ -156,7 +273,7 @@ It doesn't delete the last version, it simply creates a new version that is exac
 db.revertLastChange('doc-1')
 ```
 
-##### revertToLastVersionWhere
+#### revertToLastVersionWhere
 
 Takes a doc id and a function, and reverts to the last version returning a truthy result when passed through this function.
 Same warnings apply as for `revertLastChange`.
@@ -167,7 +284,7 @@ const desiredVersionTestFunction = (doc) => doc.foo === 2
 db.revertToLastVersionWhere('doc-1', desiredVersionTestFunction)
 ```
 
-##### undelete
+#### undelete
 Mistakes happen
 ```js
 db.delete(docId, docRev)
@@ -177,7 +294,38 @@ db.delete(docId, docRev)
 ```
 :warning: this will obviously not work if the version before deletion isn't in the database (because the database was compressed or it's a freshly replicated database), or if the database was purged from deleted documents.
 
-#### View functions
+### View functions
+
+#### view
+`GET /<dbName>/_desgin/<designName>/_view/<viewName>?<properly encoded query>`
+```js
+const promise = db.view(designName, viewName, query)
+```
+Queries a view with the given name in the given design doc. `query` should be an object with any of the following keys:
+* descending
+* endkey
+* endkey_docid
+* group
+* group_level
+* include_docs
+* inclusive_end
+* key
+* limit
+* reduce
+* skip
+* stale
+* startkey
+* startkey_docid
+* update_seq
+
+For more information, refer to [Couchdb documentation](http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options)
+
+#### viewQuery
+#### viewKeysQuery
+#### viewKeys
+
+#### Design doc specific view functions
+Those functions are pre-filled versions of the view functions above for the most common operations, like to get all the documents associated to an array of ids.
 
 To access those, pass a design doc name as second argument
 ```js
@@ -193,6 +341,9 @@ const db = getDbApi('some-db-name', 'some-design-doc-name')
 see [lib/view_functions](https://github.com/inventaire/blue-cot/blob/master/lib/view_functions.js)
 
 If you find this module useful, consider making a PR to improve the documentation
+
+### Utils
+#### buildQueryString
 
 ## Tips
 ### Cookie sessions
