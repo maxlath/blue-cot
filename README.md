@@ -27,6 +27,8 @@ Forked from [Cot](https://github.com/willconant/cot-node)
       - [viewByKey](#viewbykey)
       - [viewFindOneByKey](#viewfindonebykey)
       - [viewByKeys](#viewbykeys)
+- [Tips](#tips)
+  - [Cookie sessions](#cookie-sessions)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -191,3 +193,7 @@ const db = getDbApi('some-db-name', 'some-design-doc-name')
 see [lib/view_functions](https://github.com/inventaire/blue-cot/blob/master/lib/view_functions.js)
 
 If you find this module useful, consider making a PR to improve the documentation
+
+## Tips
+### Cookie sessions
+Since `v3.4.3`, authentification relies on [Cookie Sessions](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#cookie-authentication) instead of [Basic Auth](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#basic-authentication) for better performance. [By default, sessions timeout after 10 minutes of inactivity, but this can be adjusted](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#cookie-authentication)
