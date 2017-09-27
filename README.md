@@ -347,4 +347,8 @@ If you find this module useful, consider making a PR to improve the documentatio
 
 ## Tips
 ### Cookie sessions
-Since `v3.4.3`, authentification relies on [Cookie Sessions](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#cookie-authentication) instead of [Basic Auth](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#basic-authentication) for better performance. [By default, sessions timeout after 10 minutes of inactivity, but this can be adjusted](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#cookie-authentication)
+Since `v3.4.3`, authentification relies on [Cookie Sessions](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#cookie-authentication) instead of [Basic Auth](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#basic-authentication) for better performance. [By default, sessions timeout after 10 minutes of inactivity, but this can be adjusted](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#cookie-authentication).
+
+Indeed, from our [benchmark](https://github.com/maxlath/blue-cot/blob/master/benchmark/authentification.js):
+* 1000 cookie get: 6.169ms
+* 1000 basic auth get: 1354.313ms
