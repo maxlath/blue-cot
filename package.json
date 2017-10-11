@@ -12,7 +12,7 @@
     "test": "mocha",
     "test-watch": "mocha --watch",
     "lint": "standard",
-    "prepublish": "npm run lint && npm test",
+    "prepublishOnly": "npm run lint && npm test",
     "update-toc": "doctoc README.md"
   },
   "version": "3.4.4",
