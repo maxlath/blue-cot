@@ -301,6 +301,19 @@ describe('DbHandle', function () {
         done()
       })
     })
+
+    it('should reject bulks with invalid documents', function (done) {
+      db.bulk([
+        { _id: 'bla', type: 'person', name: 'Jolyn' },
+        null
+      ])
+      .catch(err => {
+        err.message.should.equal('invalid bulk doc')
+        err.statusCode.should.equal(400)
+        err.context.index.should.equal(1)
+        done()
+      })
+    })
   })
 
   describe('#fetch', function () {
