@@ -18,7 +18,7 @@
   "version": "3.4.5",
   "main": "lib/cot.js",
   "dependencies": {
-    "bluereq": "^2.1.1"
+    "bluereq": "^2.1.6"
   },
   "author": {
     "name": "maxlath",

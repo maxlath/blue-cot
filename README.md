@@ -74,15 +74,17 @@ const config = {
   port: 5984,
 
   // MAY
-  ssl: true
+  ssl: true // default: false
+  gzip: true // default: false
+  // logs the generated URLs, body, and response time
+  debug: true // default: false
+
   // use one of the two:
   // together
   auth: 'username:password'
   // or separated
   user: 'username'
   pass: 'password'
-  // logs the generated URLs and body
-  debug: true
 }
 
 const getDbApi = bluecot(config)
