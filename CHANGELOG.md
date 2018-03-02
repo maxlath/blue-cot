@@ -1,7 +1,10 @@
 # CHANGELOG
 *versions follow [SemVer](http://semver.org)*
 
-## 3.3.0 - 2017-01-26
+## 3.5.0 - 2018-03-02
+* Added a compression option: `gzip` (see [Initialization](https://github.com/maxlath/blue-cot#initialization))
+
+## 3.4.0 - 2017-01-26
 * Added [`db.undelete`](https://github.com/maxlath/blue-cot#undelete)
 
 ## 3.3.0 - 2017-01-23
