@@ -3,11 +3,7 @@ const cot = require('../lib/cot')
 const config = require('./config')
 
 const catch404 = function (err) {
-  if (err.statusCode === 404) {
-    return
-  } else {
-    throw err
-  }
+  if (err.statusCode !== 404) throw err
 }
 
 const putSecurityDoc = function (db) {

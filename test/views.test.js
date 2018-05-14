@@ -5,11 +5,11 @@ global.Promise = require('bluebird')
 
 const mapFn = 'function(d) { emit(d.key, null); emit("z", null); }'
 
-describe('DbHandle', function () {
+describe('Views', function () {
   const db = cot(config.cot)(config.dbName, 'test')
 
   beforeEach(function (done) {
-    return db.jsonRequest('DELETE', `/${config.dbName}`)
+    db.jsonRequest('DELETE', `/${config.dbName}`)
     .then(() => db.jsonRequest('PUT', `/${config.dbName}`))
     .then(function () {
       const docPromises = []
@@ -34,7 +34,7 @@ describe('DbHandle', function () {
 
       docPromises.push(db.post(designDoc))
 
-      return Promise.all(docPromises)
+      Promise.all(docPromises)
       .then(() => done())
     })
   })
