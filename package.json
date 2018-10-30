@@ -15,7 +15,7 @@
     "prepublishOnly": "npm run lint && npm test",
     "update-toc": "doctoc README.md"
   },
-  "version": "3.5.1",
+  "version": "3.5.2",
   "main": "lib/cot.js",
   "dependencies": {
     "bluereq": "^2.1.6"
