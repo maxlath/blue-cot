@@ -14,6 +14,12 @@ const putSecurityDoc = function (db) {
   return db.jsonRequest('PUT', `/${config.dbName}/_security`, doc)
 }
 
+const undesiredRes = done => res => {
+  const err = new Error('undesired resolved promise response')
+  console.error('undesired response', res)
+  done(err)
+}
+
 describe('DbHandle', function () {
   const db = cot(config.cot)(config.dbName)
 
@@ -307,6 +313,22 @@ describe('DbHandle', function () {
         err.message.should.equal('invalid bulk doc')
         err.statusCode.should.equal(400)
         err.context.index.should.equal(1)
+        done()
+      })
+    })
+
+    it('should reject bulks with errors', function (done) {
+      const doc = { _id: 'blu', type: 'person', name: 'Jolyn' }
+      db.bulk([ doc ])
+      .then(res => {
+        doc._rev = res[0].rev
+        return db.bulk([ doc ])
+      })
+      .then(() => db.bulk([ doc ]))
+      .then(undesiredRes(done))
+      .catch(err => {
+        console.log('err', err)
+        err.statusCode.should.equal(400)
         done()
       })
     })
