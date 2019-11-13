@@ -13,6 +13,7 @@
     "test-watch": "mocha --watch",
     "lint": "standard",
     "prepublishOnly": "npm run lint && npm test",
+    "postpublish": "git push --tags",
     "update-toc": "doctoc README.md"
   },
   "version": "3.6.1",
