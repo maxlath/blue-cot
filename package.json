@@ -16,7 +16,7 @@
     "postpublish": "git push --tags",
     "update-toc": "doctoc README.md"
   },
-  "version": "3.6.1",
+  "version": "3.6.2",
   "main": "lib/cot.js",
   "dependencies": {
     "bluereq": "^2.1.6"
