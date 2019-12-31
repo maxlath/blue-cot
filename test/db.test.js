@@ -180,16 +180,11 @@ describe('DbHandle', () => {
     })
   })
   describe('#view', () => {
-    it('should return a single row', done => {
-      db.view('test', 'testView', {})
-      .then(res => {
-        res.should.be.an.Object()
-        res.rows.should.be.an.Array()
-        res.rows.length.should.equal(1)
-        res.rows[0].key.should.equal('Will Conant')
-        done()
-      })
-      .catch(done)
+    it('should return a single row', async () => {
+      const { rows } = await db.view('test', 'testView', {})
+      rows.should.be.an.Array()
+      rows.length.should.equal(1)
+      rows[0].key.should.equal('Will Conant')
     })
   })
 
@@ -411,6 +406,25 @@ describe('DbHandle', () => {
         done()
       })
       .catch(done)
+    })
+  })
+
+  describe('#allDocs', () => {
+    it('should get all docs', async () => {
+      const res = await db.allDocs()
+      res.total_rows.should.equal(2)
+      res.rows.length.should.equal(2)
+      res.rows[0].id.should.equal('_design/test')
+      res.rows[1].id.should.equal('person-1')
+    })
+  })
+
+  describe('#allDocsKeys', () => {
+    it('should get docs by keys', async () => {
+      const res = await db.allDocsKeys([ 'person-1' ])
+      res.total_rows.should.equal(2)
+      res.rows.length.should.equal(1)
+      res.rows[0].id.should.equal('person-1')
     })
   })
 

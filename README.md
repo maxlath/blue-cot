@@ -1,6 +1,6 @@
-[CouchDB](http://couchdb.org/) library with a simple, functional-programing-friendly API, returning [Bluebird](https://github.com/petkaantonov/bluebird) promises.
+[CouchDB](http://couchdb.org/) library with a simple, functional-programing-friendly API.
 
-Forked from [Cot](https://github.com/willconant/cot-node)
+Forked from [Cot](https://github.com/willconant/cot-node), and renamed `blue-cot` in reference to the [Bluebird](https://github.com/petkaantonov/bluebird) promises it was returning until `v4.0.0`.
 
 ## Summary
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -10,6 +10,7 @@ Forked from [Cot](https://github.com/willconant/cot-node)
 - [Installing](#installing)
 - [Specificities of this lib](#specificities-of-this-lib)
 - [Initialization](#initialization)
+  - [with Bluebird](#with-bluebird)
 - [API](#api)
   - [Database functions](#database-functions)
     - [info](#info)
@@ -57,7 +58,6 @@ npm install blue-cot
 ## Specificities of this lib
 Especially compared to [Cot](https://github.com/willconant/cot-node) from which it is forked
 
-* Returns [Bluebird](https://github.com/petkaantonov/bluebird) promises
 * Class-less, thus a different initialization, but the rest of the API stays the same
 * Consequently, `blue-cot` is `this`-free: no need to bind functions contexts!
 * `4xx` and `5xx` responses will return rejected promises (should be handled with `.catch`)
@@ -92,6 +92,15 @@ const getDbApi = bluecot(config)
 const db = getDbApi('some-db-name')
 ```
 
+### with Bluebird
+From `v4.0.0`, `blue-cot` stopped returning [Bluebird](https://github.com/petkaantonov/bluebird) promises, but if you miss that feature, you can recover it by initializing `bluebird` before `blue-cot`:
+```
+global.Promise = require('bluebird')
+const bluecot = require('blue-cot')
+const getDbApi = bluecot(config)
+const db = getDbApi('some-db-name')
+```
+
 ## API
 ### Database functions
 
@@ -100,7 +109,7 @@ To handle database and design documents creation, see [couch-init2](https://gith
 #### info
 `GET /<dbName>`
 ```js
-const promise = db.info()
+const data = await db.info()
 ```
 
 ### Documents functions
@@ -109,15 +118,9 @@ const promise = db.info()
 
 Takes a document id and optionaly a rev id to get a specific version:
 ```js
-db.get('doc-1')
-.then(function (lastDocVersion) {
-  // do something
-})
+const latestDocVersion = await db.get('doc-1')
 
-db.get('doc-1', '2-b8476e8877ff5707de9e62e70a8e0aeb')
-.then(function (specificVersion) {
-  // doc._rev === '2-b8476e8877ff5707de9e62e70a8e0aeb'
-})
+const specificVersion = await db.get('doc-1', '2-b8476e8877ff5707de9e62e70a8e0aeb')
 ```
 
 Missing documents are treated as an error, and thus return a rejected promise.
@@ -125,7 +128,7 @@ Missing documents are treated as an error, and thus return a rejected promise.
 #### post
 `POST /<dbName>`
 ```js
-const promise = db.post(doc)
+const res = await db.post(doc)
 ```
 
 Creates a new document or updates an existing document. If `doc._id` is undefined, CouchDB will generate a new ID for you.
@@ -137,7 +140,7 @@ All other status codes (including 409, conflict) are treated as errors, and thus
 #### put
 `PUT /<dbName>/<doc._id>`
 ```js
-const promise = db.put(doc)
+const res = await db.put(doc)
 ```
 
 On 409 (conflict) returns result from CouchDB which looks like: `{"error":"conflict"}`
@@ -149,7 +152,7 @@ All other status codes are treated as errors, and thus return a rejected promise
 #### delete
 `DELETE /<dbName>/<docId>?rev=<rev>`
 ```js
-const promise = db.delete(docId, rev)
+const res = await db.delete(docId, rev)
 ```
 
 On 200, returns result from CouchDB which looks like: `{"ok":true, "id":"<docId>", "rev":"<docRev>"}`
@@ -159,18 +162,16 @@ All other status codes are treated as errors, and thus return a rejected promise
 If you wish to gracefully handle update conflicts while deleting, use `db.put()` on a document with `_deleted` set to `true`:
 ```js
 doc._deleted = true
-db.put(doc)
-.then(response => {
-  if (!response.ok) {
-    // there was a conflict
-  }
-})
+const res = await db.put(doc)
+if (!res.ok) {
+  // something went wrong, possibly a conflict
+}
 ```
 
 #### exists
 `GET /<dbName>/<docId>`
 ```js
-const promise = db.exists(docId)
+const res = await db.exists(docId)
 ```
 
 Returns a promise resolving to true if it exist, or a rejected promise if it doesn't.
@@ -178,7 +179,7 @@ Returns a promise resolving to true if it exist, or a rejected promise if it doe
 #### batch
 `POST /<dbName>?batch=ok`
 ```js
-const promise = db.batch(doc)
+const res = await db.batch(doc)
 ```
 doc: [`Batch Mode`](http://guide.couchdb.org/draft/performance.html#batch)
 
@@ -192,7 +193,7 @@ All other status codes are treated as errors, and thus return a rejected promise
 
 #### update
 ```js
-const promise = db.update(docId, updateFunction)
+const res = await db.update(docId, updateFunction)
 ```
 Gets the specified document, passes it to `updateFunction`, and then saves the results of `updateFunction` over the document
 
@@ -203,7 +204,7 @@ If `updateFunction` needs to do asynchronous work, it may return a promise.
 #### bulk
 `POST /<dbName>/_bulk_docs`
   ```js
-const promise = db.bulk(docs)
+const res = await db.bulk(docs)
 ```
 
 See [CouchDB documentation](https://wiki.apache.org/couchdb/HTTP_Bulk_Document_API) for more information
@@ -211,7 +212,7 @@ See [CouchDB documentation](https://wiki.apache.org/couchdb/HTTP_Bulk_Document_A
 #### allDocs
 `GET /<dbName>/_all_docs?<properly encoded query>`
 ```js
-const promise = db.allDocs(query)
+const { rows } = await db.allDocs(query)
 ```
 
 Queries the `_all_docs` view. `query` supports the same keys as in [`db.view`](#view).
@@ -219,19 +220,17 @@ Queries the `_all_docs` view. `query` supports the same keys as in [`db.view`](#
 #### allDocsKeys
 Loads documents with the specified keys and query parameters
 ```js
-const promise = db.allDocsKeys(keys, query)
+const { rows } = await db.allDocsKeys(keys, query)
 ```
 [Couchdb documentation](http://docs.couchdb.org/en/latest/api/database/bulk-api.html#post--db-_all_docs)
 
 #### fetch
 Takes doc ids, returns docs
 ```js
-db.fetch([ 'doc-1', 'doc-2', 'doc-3' ])
-.then(function (docs) {
-  docs[0]._id === 'doc-1' // true
-  docs[1]._id === 'doc-2' // true
-  docs[2]._id === 'doc-3' // true
-})
+const docs = await db.fetch([ 'doc-1', 'doc-2', 'doc-3' ])
+docs[0]._id === 'doc-1' // true
+docs[1]._id === 'doc-2' // true
+docs[2]._id === 'doc-3' // true
 ```
 
 (That's pretty much the same thing as `db.allDocsKeys` but with the query object set to `{ include_docs: true }`)
@@ -251,10 +250,7 @@ See [CouchDB changes feed documentation](http://wiki.apache.org/couchdb/HTTP_dat
 
 Takes a doc id, returns the doc's rev infos
 ```js
-db.listRevs('doc-1')
-.then(function (revsInfo) {
-  // do your thing
-})
+const revsInfo = await db.listRevs('doc-1')
 ```
 `revsInfo` will look something like:
 ```
@@ -272,7 +268,7 @@ Only works if there is a previous version and if it is still available in the da
 It doesn't delete the last version, it simply creates a new version that is exactly like the version before the current one.
 
 ```js
-db.revertLastChange('doc-1')
+const res = await db.revertLastChange('doc-1')
 ```
 
 #### revertToLastVersionWhere
@@ -281,7 +277,7 @@ Takes a doc id and a function, and reverts to the last version returning a truth
 Same warnings apply as for `revertLastChange`.
 
 ```js
-const desiredVersionTestFunction = (doc) => doc.foo === 2
+const desiredVersionTestFunction = doc => doc.foo === 2
 
 db.revertToLastVersionWhere('doc-1', desiredVersionTestFunction)
 ```
@@ -289,10 +285,9 @@ db.revertToLastVersionWhere('doc-1', desiredVersionTestFunction)
 #### undelete
 Mistakes happen
 ```js
-db.delete(docId, docRev)
-.then(res => db.undelete(docId))
-.then(res => db.get(docId))
-.then(restoredDoc => // celebrate)
+await db.delete(docId, docRev)
+await db.undelete(docId))
+const restoredDoc = await db.get(docId))
 ```
 :warning: this will obviously not work if the version before deletion isn't in the database (because the database was compressed or it's a freshly replicated database), or if the database was purged from deleted documents.
 
@@ -301,7 +296,7 @@ db.delete(docId, docRev)
 #### view
 `GET /<dbName>/_desgin/<designName>/_view/<viewName>?<properly encoded query>`
 ```js
-const promise = db.view(designName, viewName, query)
+const { rows, total_rows, offset } = db.view(designName, viewName, query)
 ```
 Queries a view with the given name in the given design doc. `query` should be an object with any of the following keys:
 * descending
