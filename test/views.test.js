@@ -1,7 +1,6 @@
 const should = require('should')
 const cot = require('../lib/cot')
-const config = require('./config')
-global.Promise = require('bluebird')
+const config = require('config')
 
 const mapFn = 'function(d) { emit(d.key, null); emit("z", null); }'
 

@@ -23,7 +23,10 @@
   "version": "3.6.3",
   "main": "lib/cot.js",
   "dependencies": {
-    "bluereq": "^2.1.6"
+    "node-fetch": "^2.6.0"
+  },
+  "engines": {
+    "node": ">= 8"
   },
   "author": {
     "name": "maxlath",
