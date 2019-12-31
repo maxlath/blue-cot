@@ -44,8 +44,7 @@ Forked from [Cot](https://github.com/willconant/cot-node), and renamed `blue-cot
       - [viewByKeys](#viewbykeys)
   - [Utils](#utils)
     - [buildQueryString](#buildquerystring)
-- [Tips](#tips)
-  - [Cookie sessions](#cookie-sessions)
+- [See also](#see-also)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -63,6 +62,7 @@ Especially compared to [Cot](https://github.com/willconant/cot-node) from which 
 * `4xx` and `5xx` responses will return rejected promises (should be handled with `.catch`)
 * Adds [a few new functions](#specific-api), notably [some view functions goodies](https://github.com/inventaire/blue-cot/blob/master/lib/view_functions.js)
 * Uses [Cookie Authentication](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#cookie-authentication) instead of [Basic Auth](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#basic-authentication) for better performance
+* Uses a single persistent connexion to CouchDB by default
 
 ## Initialization
 
@@ -80,7 +80,16 @@ const config = {
 
   // Optinonal
   // Logs the generated URLs, body, and response time
-  debug: true // default: false
+  debug: true, // default: false
+
+  // The default http agent already sets keepAlive=true
+  // but if for some reason you want to pass your own http agent, you can.
+  // Some documentation on the subject of http agents
+  // https://nodejs.org/api/http.html#http_class_http_agent
+  // https://github.com/bitinn/node-fetch#custom-agent
+  // And the recommandations of the official CouchDB NodeJS lib
+  // https://github.com/apache/couchdb-nano#pool-size-and-open-sockets
+  agent: myAgent
 }
 
 const getDbApi = bluecot(config)
@@ -345,3 +354,6 @@ Since `v3.4.3`, authentification relies on [Cookie Sessions](http://docs.couchdb
 Indeed, from our [benchmark](https://github.com/maxlath/blue-cot/blob/master/benchmark/authentification.js):
 * 1000 cookie get: 6.169ms
 * 1000 basic auth get: 1354.313ms
+
+## See also
+you might want to consider using [couchdb-nano](https://github.com/apache/couchdb-nano), the offical (but bloated ;p) CouchDB NodeJS lib
