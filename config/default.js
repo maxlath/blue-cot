@@ -1,9 +1,10 @@
 module.exports = {
   cot: {
-    port: 5984,
+    protocol: 'http',
     hostname: 'localhost',
-    user: 'admin',
-    pass: 'admin',
+    port: 5984,
+    username: 'admin',
+    password: 'admin',
     debug: false
   },
   dbName: 'test-cot-node'

@@ -69,22 +69,18 @@ Especially compared to [Cot](https://github.com/willconant/cot-node) from which 
 ```js
 const bluecot = require('blue-cot')
 const config = {
-  // MUST
-  hostname: 'localhost'
+  // Required
+  protocol: 'http',
+  hostname: 'localhost',
   port: 5984,
 
-  // MAY
-  ssl: true // default: false
-  gzip: true // default: false
-  // logs the generated URLs, body, and response time
-  debug: true // default: false
+  // Probably required
+  username: 'your-couchdb-username'
+  password: 'your-couchdb-password'
 
-  // use one of the two:
-  // together
-  auth: 'username:password'
-  // or separated
-  user: 'username'
-  pass: 'password'
+  // Optinonal
+  // Logs the generated URLs, body, and response time
+  debug: true // default: false
 }
 
 const getDbApi = bluecot(config)
