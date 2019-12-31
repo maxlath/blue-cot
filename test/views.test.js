@@ -8,8 +8,8 @@ describe('Views', function () {
   const db = cot(config.cot)(config.dbName, 'test')
 
   beforeEach(function (done) {
-    db.jsonRequest('DELETE', `/${config.dbName}`)
-    .then(() => db.jsonRequest('PUT', `/${config.dbName}`))
+    db.request('DELETE', `/${config.dbName}`)
+    .then(() => db.request('PUT', `/${config.dbName}`))
     .then(function () {
       const docPromises = []
       let i = 1

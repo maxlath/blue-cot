@@ -11,7 +11,7 @@ const putSecurityDoc = db => {
     admins: { names: [ config.cot.user ] },
     members: { names: [ config.cot.user ] }
   }
-  return db.jsonRequest('PUT', `/${config.dbName}/_security`, doc)
+  return db.request('PUT', `/${config.dbName}/_security`, doc)
 }
 
 const undesiredRes = done => res => {
@@ -24,9 +24,9 @@ describe('DbHandle', () => {
   const db = cot(config.cot)(config.dbName)
 
   beforeEach(done => {
-    db.jsonRequest('DELETE', `/${config.dbName}`)
+    db.request('DELETE', `/${config.dbName}`)
     .catch(catch404)
-    .then(() => db.jsonRequest('PUT', `/${config.dbName}`))
+    .then(() => db.request('PUT', `/${config.dbName}`))
     .then(() => {
       if (config.cot.user) return putSecurityDoc(db)
     })

@@ -46,7 +46,7 @@ const dbHanlderFunctions = [
   'revertLastChange',
   'revertToLastVersionWhere',
   'changes',
-  'jsonRequest'
+  'request'
 ]
 
 const viewFunctions = [
