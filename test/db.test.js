@@ -1,17 +1,17 @@
 require('should')
 const cot = require('../lib/cot')
-const config = require('./config')
+const config = require('config')
 
-const catch404 = function (err) {
+const catch404 = err => {
   if (err.statusCode !== 404) throw err
 }
 
-const putSecurityDoc = function (db) {
+const putSecurityDoc = db => {
   const doc = {
     admins: { names: [ config.cot.user ] },
     members: { names: [ config.cot.user ] }
   }
-  return db.jsonRequest('PUT', `/${config.dbName}/_security`, doc)
+  return db.request('PUT', `/${config.dbName}/_security`, doc)
 }
 
 const undesiredRes = done => res => {
@@ -20,24 +20,24 @@ const undesiredRes = done => res => {
   done(err)
 }
 
-describe('DbHandle', function () {
+describe('DbHandle', () => {
   const db = cot(config.cot)(config.dbName)
 
-  beforeEach(function (done) {
-    db.jsonRequest('DELETE', `/${config.dbName}`)
+  beforeEach(done => {
+    db.request('DELETE', `/${config.dbName}`)
     .catch(catch404)
-    .then(() => db.jsonRequest('PUT', `/${config.dbName}`))
-    .then(function () {
+    .then(() => db.request('PUT', `/${config.dbName}`))
+    .then(() => {
       if (config.cot.user) return putSecurityDoc(db)
     })
-    .then(function () {
+    .then(() => {
       return db.post({
         _id: 'person-1',
         type: 'person',
         name: 'Will Conant'
       })
     })
-    .then(function () {
+    .then(() => {
       return db.post({
         _id: '_design/test',
         views: {
@@ -48,117 +48,117 @@ describe('DbHandle', function () {
       })
     })
     .then(() => done())
+    .catch(done)
   })
 
-  describe('#docUrl', function () {
-    it('should encode doc ids', function (done) {
+  describe('#docUrl', () => {
+    it('should encode doc ids', done => {
       const encoded = db.docUrl('foo/bar')
       encoded.should.equal('/test-cot-node/foo%2Fbar')
       done()
     })
 
-    it('should not encode first slash in design doc ids', function (done) {
+    it('should not encode first slash in design doc ids', done => {
       const encoded = db.docUrl('_design/foo/bar')
       encoded.should.equal('/test-cot-node/_design/foo%2Fbar')
       done()
     })
   })
 
-  describe('#info', function () {
-    it('should return database info', function (done) {
-      db.info()
-      .then(function (info) {
-        info.should.be.an.Object()
-        info.doc_count.should.equal(2)
-      })
-      .then(() => done())
+  describe('#info', () => {
+    it('should return database info', async () => {
+      const info = await db.info()
+      info.should.be.an.Object()
+      info.doc_count.should.equal(2)
     })
   })
 
-  describe('#get', function () {
-    it('should return test document from database', function (done) {
-      db.get('person-1')
-      .then(function (doc) {
-        doc.should.be.an.Object()
-        doc.name.should.equal('Will Conant')
-      })
-      .then(() => done())
+  describe('#get', () => {
+    it('should return test document from database', async () => {
+      const doc = await db.get('person-1')
+      doc.should.be.an.Object()
+      doc.name.should.equal('Will Conant')
     })
 
-    it('should return a 404 when a doc === missing', function (done) {
+    it('should return a 404 when a doc === missing', done => {
       db.get('missing-doc-id')
-      .catch(function (err) {
+      .catch(err => {
         err.statusCode.should.equal(404)
         done()
       })
+      .catch(done)
     })
 
-    it('should return a specific version when passed a rev', function (done) {
+    it('should return a specific version when passed a rev', done => {
       db.get('person-1')
-      .then(function (firstVersion) {
+      .then(firstVersion => {
         db.update('person-1', randomUpdate)
         .then(() => db.get('person-1', firstVersion._rev))
-        .then(function (specificVersion) {
+        .then(specificVersion => {
           specificVersion.should.deepEqual(firstVersion)
           done()
         })
       })
+      .catch(done)
     })
   })
 
-  describe('#delete', function () {
-    it('should delete a document', function (done) {
+  describe('#delete', () => {
+    it('should delete a document', done => {
       db.get('person-1')
-      .then(function (doc) {
-        db.delete('person-1', doc._rev)
-        .then(function () {
-          db.get('person-1')
-          .catch(function (err) {
+      .then(doc => {
+        return db.delete('person-1', doc._rev)
+        .then(() => {
+          return db.get('person-1')
+          .catch(err => {
             err.statusCode.should.equal(404)
             done()
           })
         })
       })
+      .catch(done)
     })
   })
-  describe('#undelete', function () {
-    it('should undelete a document', function (done) {
+  describe('#undelete', () => {
+    it('should undelete a document', done => {
       db.undelete.should.be.a.Function()
       const docId = 'person-1'
       db.get(docId)
-      .then(function (originalDoc) {
+      .then(originalDoc => {
         db.delete(docId, originalDoc._rev)
         .then(res => db.undelete(docId))
         .then(res => db.get(docId))
-        .then(function (restoredDoc) {
+        .then(restoredDoc => {
           delete originalDoc._rev
           delete restoredDoc._rev
           originalDoc.should.deepEqual(restoredDoc)
           done()
         })
       })
+      .catch(done)
     })
-    it('should throw when asked to delete a non deleted document', function (done) {
+    it('should throw when asked to delete a non deleted document', done => {
       const docId = 'person-1'
       // updating so that there is more than one rev
       db.update(docId, randomUpdate)
       .then((res) => db.undelete(docId))
-      .catch(function (err) {
+      .catch(err => {
         err.message.should.equal("can't undelete an non-deleted document")
         done()
       })
+      .catch(done)
     })
-    it('should be able to undelete several times the same doc', function (done) {
+    it('should be able to undelete several times the same doc', done => {
       db.undelete.should.be.a.Function()
       const docId = 'person-1'
       db.get(docId)
-      .then(function (originalDoc) {
+      .then(originalDoc => {
         // First delete
         db.delete(docId, originalDoc._rev)
         // First undelete
         .then(res => db.undelete(docId))
         .then(res => db.get(docId))
-        .then(function (restoredDoc) {
+        .then(restoredDoc => {
           const currentRev = restoredDoc._rev
           delete originalDoc._rev
           delete restoredDoc._rev
@@ -168,7 +168,7 @@ describe('DbHandle', function () {
           // Second undelete
           .then(res => db.undelete(docId))
           .then(res => db.get(docId))
-          .then(function (restoredDoc) {
+          .then(restoredDoc => {
             delete originalDoc._rev
             delete restoredDoc._rev
             originalDoc.should.deepEqual(restoredDoc)
@@ -176,38 +176,36 @@ describe('DbHandle', function () {
           })
         })
       })
+      .catch(done)
     })
   })
-  describe('#view', function () {
-    it('should return a single row', function (done) {
-      db.view('test', 'testView', {})
-      .then(function (res) {
-        res.should.be.an.Object()
-        res.rows.should.be.an.Array()
-        res.rows.length.should.equal(1)
-        res.rows[0].key.should.equal('Will Conant')
-        done()
-      })
+  describe('#view', () => {
+    it('should return a single row', async () => {
+      const { rows } = await db.view('test', 'testView', {})
+      rows.should.be.an.Array()
+      rows.length.should.equal(1)
+      rows[0].key.should.equal('Will Conant')
     })
   })
 
-  describe('#put', function () {
-    it('should treat conflicts as expected', function (done) {
+  describe('#put', () => {
+    it('should treat conflicts as expected', done => {
       const doc = { _id: 'put-test' }
       db.put(doc)
-      .then(function (resp) {
+      .then(resp => {
         db.put(doc)
         .then((res) => done(new Error('should not have resolved')))
-        .catch(function (err) {
+        .catch(err => {
           err.body.error.should.equal('conflict')
           done()
         })
       })
+      .catch(done)
     })
   })
 
-  describe('#post', function () {
-    it('should treat conflicts as errors', function (done) {
+  describe('#post', () => {
+    it('should treat conflicts as errors', done => {
       const doc = { _id: 'post-test' }
       db.post(doc)
       .then((res) => db.post(doc))
@@ -217,84 +215,84 @@ describe('DbHandle', function () {
     })
   })
 
-  describe('#batch', function () {
-    it('should ignore conflicts', function (done) {
+  describe('#batch', () => {
+    it('should ignore conflicts', async () => {
       const doc = { _id: 'batch-test' }
-      var origRev
-      db.post(doc)
-      .then(function (res) {
-        origRev = res.rev
-        db.batch(doc)
-      })
-      .delay(500)
-      .then((res) => db.get(doc._id))
-      .then((res) => res._rev.should.equal(origRev))
-      .then(() => done())
+      const res = await db.post(doc)
+      await db.batch(doc)
+      await wait(10)
+      const res3 = await db.get(doc._id)
+      res3._rev.should.equal(res.rev)
     })
   })
 
-  describe('#exists', function () {
-    it('should return true for existing doc', function (done) {
+  describe('#exists', () => {
+    it('should return true for existing doc', done => {
       db.exists('person-1')
-      .then(function (res) {
+      .then(res => {
         res.should.equal(true)
         done()
       })
+      .catch(done)
     })
 
-    it('should return false for non-existent doc', function (done) {
+    it('should return false for non-existent doc', done => {
       db.exists('does-not-exist')
-      .then(function (res) {
+      .then(res => {
         res.should.equal(false)
         done()
       })
+      .catch(done)
     })
   })
 
-  describe('#info', function () {
-    it('should return the db info', function (done) {
+  describe('#info', () => {
+    it('should return the db info', done => {
       db.info()
-      .then(function (res) {
+      .then(res => {
         res.db_name.should.equal('test-cot-node')
         done()
       })
+      .catch(done)
     })
   })
 
-  describe('#update', function () {
-    it('should apply the passed function to the doc', function (done) {
-      db.update('person-1', function (doc) {
+  describe('#update', () => {
+    it('should apply the passed to the doc', done => {
+      db.update('person-1', (doc) => {
         doc.b = 2
         return doc
       })
       .then(() => db.get('person-1'))
-      .then(function (doc) {
+      .then(doc => {
         doc.b.should.equal(2)
         done()
       })
+      .catch(done)
     })
 
-    it('should create the doc if missing', function (done) {
-      db.update('does-not-exist', function (doc) {
+    it('should create the doc if missing', done => {
+      db.update('does-not-exist', (doc) => {
         doc.hello = 123
         return doc
       })
       .then(() => db.get('does-not-exist'))
-      .then(function (doc) {
+      .then(doc => {
         doc.hello.should.equal(123)
         done()
       })
+      .catch(done)
     })
   })
 
-  describe('#bulk', function () {
-    it('should post all the passed docs', function (done) {
+  describe('#bulk', () => {
+    it('should post all the passed docs', done => {
       db.bulk([
         { _id: 'person-2', type: 'person', name: 'Bobby Lapointe' },
         { _id: 'person-3', type: 'person', name: 'Jean Valjean' },
         { _id: 'person-4', type: 'person', name: 'Rose Tyler' }
       ])
-      .then(function (res) {
+      .then(res => {
         res.length.should.equal(3)
         res.should.be.an.Array()
         res[0].id.should.equal('person-2')
@@ -302,9 +300,10 @@ describe('DbHandle', function () {
         res[2].id.should.equal('person-4')
         done()
       })
+      .catch(done)
     })
 
-    it('should reject bulks with invalid documents', function (done) {
+    it('should reject bulks with invalid documents', done => {
       db.bulk([
         { _id: 'bla', type: 'person', name: 'Jolyn' },
         null
@@ -315,9 +314,10 @@ describe('DbHandle', function () {
         err.context.index.should.equal(1)
         done()
       })
+      .catch(done)
     })
 
-    it('should reject bulks with errors', function (done) {
+    it('should reject bulks with errors', done => {
       const doc = { _id: 'blu', type: 'person', name: 'Jolyn' }
       db.bulk([ doc ])
       .then(res => {
@@ -327,23 +327,23 @@ describe('DbHandle', function () {
       .then(() => db.bulk([ doc ]))
       .then(undesiredRes(done))
       .catch(err => {
-        console.log('err', err)
         err.statusCode.should.equal(400)
         done()
       })
+      .catch(done)
     })
   })
 
-  describe('#fetch', function () {
-    it('should return all the docs requested', function (done) {
+  describe('#fetch', () => {
+    it('should return all the docs requested', done => {
       db.bulk([
         { _id: 'person-2', type: 'person', name: 'Bobby Lapointe' },
         { _id: 'person-3', type: 'person', name: 'Jean Valjean' },
         { _id: 'person-4', type: 'person', name: 'Rose Tyler' }
       ])
-      .then(function (res) {
+      .then(res => {
         db.fetch([ 'person-2', 'person-4' ])
-        .then(function (res) {
+        .then(res => {
           res.should.be.an.Array()
           res.length.should.equal(2)
           res[0]._id.should.equal('person-2')
@@ -351,91 +351,119 @@ describe('DbHandle', function () {
           done()
         })
       })
+      .catch(done)
     })
   })
 
-  describe('#list-revs', function () {
-    it('should return all the doc revs', function (done) {
+  describe('#list-revs', () => {
+    it('should return all the doc revs', done => {
       db.listRevs.should.be.a.Function()
       db.update('person-1', randomUpdate)
       .then(() => db.update('person-1', randomUpdate))
-      .then(function (res) {
+      .then(res => {
         db.listRevs('person-1')
-        .then(function (res) {
+        .then(res => {
           res.should.be.an.Array()
           res[0].rev.split('-')[0].should.equal('3')
           res[0].status.should.equal('available')
           done()
         })
       })
+      .catch(done)
     })
   })
 
-  describe('#revertLastChange', function () {
-    it('should revert to the previous version', function (done) {
+  describe('#revertLastChange', () => {
+    it('should revert to the previous version', done => {
       db.revertLastChange.should.be.a.Function()
       const getCurrentDoc = () => db.get('person-1')
 
       db.update('person-1', randomUpdate)
       .then(getCurrentDoc)
-      .then(function (previousVersion) {
+      .then(previousVersion => {
         db.update('person-1', randomUpdate)
         .then(getCurrentDoc)
-        .then(function (lastVersion) {
+        .then(lastVersion => {
           lastVersion._rev.should.not.equal(previousVersion._rev)
           lastVersion.foo.should.not.equal(previousVersion.foo)
           db.revertLastChange('person-1')
           .then((res) => res.revert.should.equal(previousVersion._rev))
           .then(getCurrentDoc)
-          .then(function (restoredVersion) {
+          .then(restoredVersion => {
             lastVersion.foo.should.not.equal(restoredVersion.foo)
             restoredVersion.foo.should.equal(previousVersion.foo)
             done()
           })
         })
       })
+      .catch(done)
     })
 
-    it('should reject when no previous rev can be found', function (done) {
+    it('should reject when no previous rev can be found', done => {
       db.revertLastChange('person-1')
-      .catch(function (err) {
+      .catch(err => {
         err.message.should.equal('no previous version could be found')
         done()
       })
+      .catch(done)
     })
   })
 
-  describe('#revertToLastVersionWhere', function () {
-    it('should revert to the last matching version', function (done) {
+  describe('#allDocs', () => {
+    it('should get all docs', async () => {
+      const res = await db.allDocs()
+      res.total_rows.should.equal(2)
+      res.rows.length.should.equal(2)
+      res.rows[0].id.should.equal('_design/test')
+      res.rows[1].id.should.equal('person-1')
+    })
+  })
+
+  describe('#allDocsKeys', () => {
+    it('should get docs by keys', async () => {
+      const res = await db.allDocsKeys([ 'person-1' ])
+      res.total_rows.should.equal(2)
+      res.rows.length.should.equal(1)
+      res.rows[0].id.should.equal('person-1')
+    })
+  })
+
+  describe('#revertToLastVersionWhere', () => {
+    it('should revert to the last matching version', done => {
       db.revertToLastVersionWhere.should.be.a.Function()
 
       db.update('person-1', randomUpdate)
-      .then(() => db.update('person-1', function (doc) {
-        doc.foo = 2
-        return doc
-      }))
-      .then(function (res) {
+      .then(() => {
+        return db.update('person-1', doc => {
+          doc.foo = 2
+          return doc
+        })
+      })
+      .then(res => {
         const targetRev = res.rev
         db.update('person-1', randomUpdate)
         .then(() => db.update('person-1', randomUpdate))
         .then(() => db.update('person-1', randomUpdate))
         .then(() => {
           db.revertToLastVersionWhere('person-1', (doc) => doc.foo === 2)
-          .then((res) => {
+          .then(res => {
             res.revert.should.equal(targetRev)
             db.get('person-1')
-            .then(function (doc) {
+            .then(doc => {
               doc.foo.should.equal(2)
               done()
             })
           })
         })
       })
+      .catch(done)
     })
   })
 })
 
-const randomUpdate = function (doc) {
+const randomUpdate = (doc) => {
   doc.foo = Math.random()
   return doc
 }
+
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
