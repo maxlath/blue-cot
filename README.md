@@ -74,7 +74,7 @@ const config = {
   hostname: 'localhost',
   port: 5984,
 
-  // Probably required
+  // Required if the database you are querying requires authentification
   username: 'your-couchdb-username'
   password: 'your-couchdb-password'
 
