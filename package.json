@@ -14,7 +14,7 @@
     "lint": "standard",
     "prepublishOnly": "npm run lint && npm test",
     "postpublish": "git push --tags",
-    "update-toc": "doctoc README.md"
+    "update-toc": "./scripts/update_toc.sh"
   },
   "files": [
     "config",
@@ -39,7 +39,6 @@
   "forkedFrom": "http://github.com/willconant/cot-node",
   "devDependencies": {
     "config": "^3.2.4",
-    "doctoc": "^1.4.0",
     "git-hooks": "^1.1.10",
     "mocha": "^7.0.0",
     "should": "^13.2.1",
