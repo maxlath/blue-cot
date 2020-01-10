@@ -1,6 +1,22 @@
 # CHANGELOG
 *versions follow [SemVer](http://semver.org)*
 
+## 4.0.0 - 2019-12-31
+**BREAKING CHANGES**:
+* `blue-cot` doesn't return Bluebird promises (but you can easily [recover that feature](https://github.com/maxlath/blue-cot#with-bluebird))
+* Config parameters changes:
+  * Replaced `ssl` flag by `protocol` parameter
+  * Renamed `user` -> `username`
+  * Renamed `pass` -> `password`
+  * Removed `gzip` flag
+  * Removed `auth` paramater: use `username` and `password`
+* Functions changes:
+  * Renamed `db.jsonRequest` -> `db.request`
+
+New Features:
+* Default http agent reuses sockets by setting `keepAlive=true` flag.
+* A custom http agent can be passed
+
 ## 3.5.0 - 2018-03-02
 * Added a compression option: `gzip` (see [Initialization](https://github.com/maxlath/blue-cot#initialization))
 
