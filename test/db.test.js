@@ -6,6 +6,13 @@ const catch404 = err => {
   if (err.statusCode !== 404) throw err
 }
 
+const shouldNotBeCalled = res => {
+  const err = new Error('function was expected not to be called')
+  err.name = 'shouldNotBeCalled'
+  err.context = { res }
+  throw err
+}
+
 const putSecurityDoc = db => {
   const doc = {
     admins: { names: [ config.cot.user ] },
@@ -14,54 +21,39 @@ const putSecurityDoc = db => {
   return db.request('PUT', `/${config.dbName}/_security`, doc)
 }
 
-const undesiredRes = done => res => {
-  const err = new Error('undesired resolved promise response')
-  console.error('undesired response', res)
-  done(err)
-}
-
 describe('DbHandle', () => {
   const db = cot(config.cot)(config.dbName)
 
-  beforeEach(done => {
-    db.request('DELETE', `/${config.dbName}`)
-    .catch(catch404)
-    .then(() => db.request('PUT', `/${config.dbName}`))
-    .then(() => {
-      if (config.cot.user) return putSecurityDoc(db)
+  beforeEach(async () => {
+    await db.request('DELETE', `/${config.dbName}`).catch(catch404)
+    await db.request('PUT', `/${config.dbName}`)
+    if (config.cot.user) await putSecurityDoc(db)
+
+    await db.post({
+      _id: 'person-1',
+      type: 'person',
+      name: 'Will Conant'
     })
-    .then(() => {
-      return db.post({
-        _id: 'person-1',
-        type: 'person',
-        name: 'Will Conant'
-      })
-    })
-    .then(() => {
-      return db.post({
-        _id: '_design/test',
-        views: {
-          testView: {
-            map: 'function(d) { emit(d.name, null) }'
-          }
+
+    await db.post({
+      _id: '_design/test',
+      views: {
+        testView: {
+          map: 'function(d) { emit(d.name, null) }'
         }
-      })
+      }
     })
-    .then(() => done())
-    .catch(done)
   })
 
   describe('#docUrl', () => {
-    it('should encode doc ids', done => {
+    it('should encode doc ids', () => {
       const encoded = db.docUrl('foo/bar')
       encoded.should.equal('/test-cot-node/foo%2Fbar')
-      done()
     })
 
-    it('should not encode first slash in design doc ids', done => {
+    it('should not encode first slash in design doc ids', () => {
       const encoded = db.docUrl('_design/foo/bar')
       encoded.should.equal('/test-cot-node/_design/foo%2Fbar')
-      done()
     })
   })
 
@@ -89,96 +81,74 @@ describe('DbHandle', () => {
       .catch(done)
     })
 
-    it('should return a specific version when passed a rev', done => {
-      db.get('person-1')
-      .then(firstVersion => {
-        db.update('person-1', randomUpdate)
-        .then(() => db.get('person-1', firstVersion._rev))
-        .then(specificVersion => {
-          specificVersion.should.deepEqual(firstVersion)
-          done()
-        })
-      })
-      .catch(done)
+    it('should return a specific version when passed a rev', async () => {
+      const firstVersion = await db.get('person-1')
+      await db.update('person-1', randomUpdate)
+      const specificVersion = await db.get('person-1', firstVersion._rev)
+      specificVersion.should.deepEqual(firstVersion)
     })
   })
 
   describe('#delete', () => {
-    it('should delete a document', done => {
-      db.get('person-1')
-      .then(doc => {
-        return db.delete('person-1', doc._rev)
-        .then(() => {
-          return db.get('person-1')
-          .catch(err => {
-            err.statusCode.should.equal(404)
-            done()
-          })
-        })
-      })
-      .catch(done)
+    it('should delete a document', async () => {
+      const doc = await db.get('person-1')
+      await db.delete('person-1', doc._rev)
+      try {
+        await db.get('person-1').then(shouldNotBeCalled)
+      } catch (err) {
+        err.statusCode.should.equal(404)
+      }
     })
   })
+
   describe('#undelete', () => {
-    it('should undelete a document', done => {
+    it('should undelete a document', async () => {
       db.undelete.should.be.a.Function()
       const docId = 'person-1'
-      db.get(docId)
-      .then(originalDoc => {
-        db.delete(docId, originalDoc._rev)
-        .then(res => db.undelete(docId))
-        .then(res => db.get(docId))
-        .then(restoredDoc => {
-          delete originalDoc._rev
-          delete restoredDoc._rev
-          originalDoc.should.deepEqual(restoredDoc)
-          done()
-        })
-      })
-      .catch(done)
+      const originalDoc = await db.get(docId)
+      await db.delete(docId, originalDoc._rev)
+      await db.undelete(docId)
+      const restoredDoc = await db.get(docId)
+      delete originalDoc._rev
+      delete restoredDoc._rev
+      originalDoc.should.deepEqual(restoredDoc)
     })
-    it('should throw when asked to delete a non deleted document', done => {
+
+    it('should throw when asked to delete a non deleted document', async () => {
       const docId = 'person-1'
       // updating so that there is more than one rev
-      db.update(docId, randomUpdate)
-      .then((res) => db.undelete(docId))
-      .catch(err => {
+      await db.update(docId, randomUpdate)
+      try {
+        await db.undelete(docId).then(shouldNotBeCalled)
+      } catch (err) {
         err.message.should.equal("can't undelete an non-deleted document")
-        done()
-      })
-      .catch(done)
+      }
     })
-    it('should be able to undelete several times the same doc', done => {
+
+    it('should be able to undelete several times the same doc', async () => {
       db.undelete.should.be.a.Function()
       const docId = 'person-1'
-      db.get(docId)
-      .then(originalDoc => {
-        // First delete
-        db.delete(docId, originalDoc._rev)
-        // First undelete
-        .then(res => db.undelete(docId))
-        .then(res => db.get(docId))
-        .then(restoredDoc => {
-          const currentRev = restoredDoc._rev
-          delete originalDoc._rev
-          delete restoredDoc._rev
-          originalDoc.should.deepEqual(restoredDoc)
-          // Second delete
-          db.delete(docId, currentRev)
-          // Second undelete
-          .then(res => db.undelete(docId))
-          .then(res => db.get(docId))
-          .then(restoredDoc => {
-            delete originalDoc._rev
-            delete restoredDoc._rev
-            originalDoc.should.deepEqual(restoredDoc)
-            done()
-          })
-        })
-      })
-      .catch(done)
+      const originalDoc = await db.get(docId)
+      // First delete
+      await db.delete(docId, originalDoc._rev)
+      // First undelete
+      await db.undelete(docId)
+      const restoredDoc = await db.get(docId)
+      const currentRev = restoredDoc._rev
+      delete originalDoc._rev
+      delete restoredDoc._rev
+      originalDoc.should.deepEqual(restoredDoc)
+      // Second delete
+      await db.delete(docId, currentRev)
+      // Second undelete
+      await db.undelete(docId)
+      const rerestoredDoc = await db.get(docId)
+      delete originalDoc._rev
+      delete rerestoredDoc._rev
+      originalDoc.should.deepEqual(rerestoredDoc)
     })
   })
+
   describe('#view', () => {
     it('should return a single row', async () => {
       const { rows } = await db.view('test', 'testView', {})
@@ -189,29 +159,26 @@ describe('DbHandle', () => {
   })
 
   describe('#put', () => {
-    it('should treat conflicts as expected', done => {
+    it('should treat conflicts as expected', async () => {
       const doc = { _id: 'put-test' }
-      db.put(doc)
-      .then(resp => {
-        db.put(doc)
-        .then((res) => done(new Error('should not have resolved')))
-        .catch(err => {
-          err.body.error.should.equal('conflict')
-          done()
-        })
-      })
-      .catch(done)
+      await db.put(doc)
+      try {
+        await db.put(doc).then(shouldNotBeCalled)
+      } catch (err) {
+        err.body.error.should.equal('conflict')
+      }
     })
   })
 
   describe('#post', () => {
-    it('should treat conflicts as errors', done => {
+    it('should treat conflicts as errors', async () => {
       const doc = { _id: 'post-test' }
-      db.post(doc)
-      .then((res) => db.post(doc))
-      .then((res) => done(new Error('should not have resolved')))
-      // got the expected error
-      .catch((err) => done()) // eslint-disable-line handle-callback-err
+      await db.post(doc)
+      try {
+        await db.post(doc).then(shouldNotBeCalled)
+      } catch (err) {
+        err.statusCode.should.equal(409)
+      }
     })
   })
 
@@ -227,185 +194,136 @@ describe('DbHandle', () => {
   })
 
   describe('#exists', () => {
-    it('should return true for existing doc', done => {
-      db.exists('person-1')
-      .then(res => {
-        res.should.equal(true)
-        done()
-      })
-      .catch(done)
+    it('should return true for existing doc', async () => {
+      const res = await db.exists('person-1')
+      res.should.equal(true)
     })
 
-    it('should return false for non-existent doc', done => {
-      db.exists('does-not-exist')
-      .then(res => {
-        res.should.equal(false)
-        done()
-      })
-      .catch(done)
+    it('should return false for non-existent doc', async () => {
+      const res = await db.exists('does-not-exist')
+      res.should.equal(false)
     })
   })
 
   describe('#info', () => {
-    it('should return the db info', done => {
-      db.info()
-      .then(res => {
-        res.db_name.should.equal('test-cot-node')
-        done()
-      })
-      .catch(done)
+    it('should return the db info', async () => {
+      const res = await db.info()
+      res.db_name.should.equal('test-cot-node')
     })
   })
 
   describe('#update', () => {
-    it('should apply the passed to the doc', done => {
-      db.update('person-1', (doc) => {
+    it('should apply the passed to the doc', async () => {
+      await db.update('person-1', doc => {
         doc.b = 2
         return doc
       })
-      .then(() => db.get('person-1'))
-      .then(doc => {
-        doc.b.should.equal(2)
-        done()
-      })
-      .catch(done)
+      const doc = await db.get('person-1')
+      doc.b.should.equal(2)
     })
 
-    it('should create the doc if missing', done => {
-      db.update('does-not-exist', (doc) => {
+    it('should create the doc if missing', async () => {
+      await db.update('does-not-exist', doc => {
         doc.hello = 123
         return doc
       })
-      .then(() => db.get('does-not-exist'))
-      .then(doc => {
-        doc.hello.should.equal(123)
-        done()
-      })
-      .catch(done)
+      const doc = await db.get('does-not-exist')
+      doc.hello.should.equal(123)
     })
   })
 
   describe('#bulk', () => {
-    it('should post all the passed docs', done => {
-      db.bulk([
+    it('should post all the passed docs', async () => {
+      const res = await db.bulk([
         { _id: 'person-2', type: 'person', name: 'Bobby Lapointe' },
         { _id: 'person-3', type: 'person', name: 'Jean Valjean' },
         { _id: 'person-4', type: 'person', name: 'Rose Tyler' }
       ])
-      .then(res => {
-        res.length.should.equal(3)
-        res.should.be.an.Array()
-        res[0].id.should.equal('person-2')
-        res[1].id.should.equal('person-3')
-        res[2].id.should.equal('person-4')
-        done()
-      })
-      .catch(done)
+      res.length.should.equal(3)
+      res.should.be.an.Array()
+      res[0].id.should.equal('person-2')
+      res[1].id.should.equal('person-3')
+      res[2].id.should.equal('person-4')
     })
 
-    it('should reject bulks with invalid documents', done => {
-      db.bulk([
-        { _id: 'bla', type: 'person', name: 'Jolyn' },
-        null
-      ])
-      .catch(err => {
+    it('should reject bulks with invalid documents', async () => {
+      try {
+        await db.bulk([
+          { _id: 'bla', type: 'person', name: 'Jolyn' },
+          null
+        ])
+        .then(shouldNotBeCalled)
+      } catch (err) {
         err.message.should.equal('invalid bulk doc')
         err.statusCode.should.equal(400)
         err.context.index.should.equal(1)
-        done()
-      })
-      .catch(done)
+      }
     })
 
-    it('should reject bulks with errors', done => {
+    it('should reject bulks with errors', async () => {
       const doc = { _id: 'blu', type: 'person', name: 'Jolyn' }
-      db.bulk([ doc ])
-      .then(res => {
-        doc._rev = res[0].rev
-        return db.bulk([ doc ])
-      })
-      .then(() => db.bulk([ doc ]))
-      .then(undesiredRes(done))
-      .catch(err => {
+      const res = await db.bulk([ doc ])
+      doc._rev = res[0].rev
+      await db.bulk([ doc ])
+      try {
+        await db.bulk([ doc ]).then(shouldNotBeCalled)
+      } catch (err) {
         err.statusCode.should.equal(400)
-        done()
-      })
-      .catch(done)
+      }
     })
   })
 
   describe('#fetch', () => {
-    it('should return all the docs requested', done => {
-      db.bulk([
+    it('should return all the docs requested', async () => {
+      await db.bulk([
         { _id: 'person-2', type: 'person', name: 'Bobby Lapointe' },
         { _id: 'person-3', type: 'person', name: 'Jean Valjean' },
         { _id: 'person-4', type: 'person', name: 'Rose Tyler' }
       ])
-      .then(res => {
-        db.fetch([ 'person-2', 'person-4' ])
-        .then(res => {
-          res.should.be.an.Array()
-          res.length.should.equal(2)
-          res[0]._id.should.equal('person-2')
-          res[1]._id.should.equal('person-4')
-          done()
-        })
-      })
-      .catch(done)
+      const res = await db.fetch([ 'person-2', 'person-4' ])
+      res.should.be.an.Array()
+      res.length.should.equal(2)
+      res[0]._id.should.equal('person-2')
+      res[1]._id.should.equal('person-4')
     })
   })
 
   describe('#list-revs', () => {
-    it('should return all the doc revs', done => {
+    it('should return all the doc revs', async () => {
       db.listRevs.should.be.a.Function()
-      db.update('person-1', randomUpdate)
-      .then(() => db.update('person-1', randomUpdate))
-      .then(res => {
-        db.listRevs('person-1')
-        .then(res => {
-          res.should.be.an.Array()
-          res[0].rev.split('-')[0].should.equal('3')
-          res[0].status.should.equal('available')
-          done()
-        })
-      })
-      .catch(done)
+      await db.update('person-1', randomUpdate)
+      await db.update('person-1', randomUpdate)
+      const res = await db.listRevs('person-1')
+      res.should.be.an.Array()
+      res[0].rev.split('-')[0].should.equal('3')
+      res[0].status.should.equal('available')
     })
   })
 
   describe('#revertLastChange', () => {
-    it('should revert to the previous version', done => {
+    it('should revert to the previous version', async () => {
       db.revertLastChange.should.be.a.Function()
       const getCurrentDoc = () => db.get('person-1')
 
-      db.update('person-1', randomUpdate)
-      .then(getCurrentDoc)
-      .then(previousVersion => {
-        db.update('person-1', randomUpdate)
-        .then(getCurrentDoc)
-        .then(lastVersion => {
-          lastVersion._rev.should.not.equal(previousVersion._rev)
-          lastVersion.foo.should.not.equal(previousVersion.foo)
-          db.revertLastChange('person-1')
-          .then((res) => res.revert.should.equal(previousVersion._rev))
-          .then(getCurrentDoc)
-          .then(restoredVersion => {
-            lastVersion.foo.should.not.equal(restoredVersion.foo)
-            restoredVersion.foo.should.equal(previousVersion.foo)
-            done()
-          })
-        })
-      })
-      .catch(done)
+      await db.update('person-1', randomUpdate)
+      const previousVersion = await getCurrentDoc()
+      await db.update('person-1', randomUpdate)
+      const lastVersion = await getCurrentDoc()
+      lastVersion._rev.should.not.equal(previousVersion._rev)
+      lastVersion.foo.should.not.equal(previousVersion.foo)
+      const res = await db.revertLastChange('person-1')
+      res.revert.should.equal(previousVersion._rev)
+      const restoredVersion = await getCurrentDoc()
+      lastVersion.foo.should.not.equal(restoredVersion.foo)
+      restoredVersion.foo.should.equal(previousVersion.foo)
     })
 
-    it('should reject when no previous rev can be found', done => {
-      db.revertLastChange('person-1')
-      .catch(err => {
+    it('should reject when no previous rev can be found', async () => {
+      try {
+        await db.revertLastChange('person-1').then(shouldNotBeCalled)
+      } catch (err) {
         err.message.should.equal('no previous version could be found')
-        done()
-      })
-      .catch(done)
+      }
     })
   })
 
@@ -429,39 +347,27 @@ describe('DbHandle', () => {
   })
 
   describe('#revertToLastVersionWhere', () => {
-    it('should revert to the last matching version', done => {
+    it('should revert to the last matching version', async () => {
       db.revertToLastVersionWhere.should.be.a.Function()
 
-      db.update('person-1', randomUpdate)
-      .then(() => {
-        return db.update('person-1', doc => {
-          doc.foo = 2
-          return doc
-        })
+      await db.update('person-1', randomUpdate)
+      const res = await db.update('person-1', doc => {
+        doc.foo = 2
+        return doc
       })
-      .then(res => {
-        const targetRev = res.rev
-        db.update('person-1', randomUpdate)
-        .then(() => db.update('person-1', randomUpdate))
-        .then(() => db.update('person-1', randomUpdate))
-        .then(() => {
-          db.revertToLastVersionWhere('person-1', (doc) => doc.foo === 2)
-          .then(res => {
-            res.revert.should.equal(targetRev)
-            db.get('person-1')
-            .then(doc => {
-              doc.foo.should.equal(2)
-              done()
-            })
-          })
-        })
-      })
-      .catch(done)
+      const targetRev = res.rev
+      await db.update('person-1', randomUpdate)
+      await db.update('person-1', randomUpdate)
+      await db.update('person-1', randomUpdate)
+      const res2 = await db.revertToLastVersionWhere('person-1', doc => doc.foo === 2)
+      res2.revert.should.equal(targetRev)
+      const doc = await db.get('person-1')
+      doc.foo.should.equal(2)
     })
   })
 })
 
-const randomUpdate = (doc) => {
+const randomUpdate = doc => {
   doc.foo = Math.random()
   return doc
 }
