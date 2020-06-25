@@ -286,6 +286,29 @@ describe('DbHandle', () => {
       res[0]._id.should.equal('person-2')
       res[1]._id.should.equal('person-4')
     })
+
+    it('should reject on missing doc', async () => {
+      await db.bulk([
+        { _id: 'person-5', type: 'person', name: 'Bobby Lapointe' },
+        { _id: 'person-6', type: 'person', name: 'Jean Valjean' }
+      ])
+      try {
+        await db.fetch([ 'person-2', 'person-unknown' ]).then(shouldNotBeCalled)
+      } catch (err) {
+        err.statusCode.should.equal(400)
+      }
+    })
+
+    it('should reject on deleted doc', async () => {
+      const { rev } = await db.post({ _id: 'person-8', type: 'person', name: 'Jean Valjean' })
+      await db.delete('person-8', rev)
+      try {
+        await db.fetch([ 'person-8' ]).then(shouldNotBeCalled)
+      } catch (err) {
+        console.log('err', err.context.res)
+        err.statusCode.should.equal(400)
+      }
+    })
   })
 
   describe('#list-revs', () => {
