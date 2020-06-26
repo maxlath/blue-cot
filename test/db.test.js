@@ -289,13 +289,15 @@ describe('DbHandle', () => {
 
     it('should reject on missing doc', async () => {
       await db.bulk([
-        { _id: 'person-5', type: 'person', name: 'Bobby Lapointe' },
-        { _id: 'person-6', type: 'person', name: 'Jean Valjean' }
+        { _id: 'person-10', type: 'person', name: 'Bobby Lapointe' }
       ])
       try {
-        await db.fetch([ 'person-2', 'person-unknown' ]).then(shouldNotBeCalled)
+        await db.fetch([ 'person-10', 'person-unknown' ]).then(shouldNotBeCalled)
       } catch (err) {
         err.statusCode.should.equal(400)
+        err.context.errors.should.deepEqual([
+          { key: 'person-unknown', error: 'not_found' }
+        ])
       }
     })
 
@@ -305,8 +307,10 @@ describe('DbHandle', () => {
       try {
         await db.fetch([ 'person-8' ]).then(shouldNotBeCalled)
       } catch (err) {
-        console.log('err', err.context.res)
         err.statusCode.should.equal(400)
+        err.context.errors.should.deepEqual([
+          { key: 'person-8', error: 'deleted' }
+        ])
       }
     })
   })
