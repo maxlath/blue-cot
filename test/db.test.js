@@ -99,6 +99,15 @@ describe('DbHandle', () => {
         err.statusCode.should.equal(404)
       }
     })
+
+    it('should throw an error if no document id is passed', async () => {
+      try {
+        await db.delete().then(shouldNotBeCalled)
+      } catch (err) {
+        err.name.should.equal('TypeError')
+        err.message.should.equal('invalid doc id')
+      }
+    })
   })
 
   describe('#undelete', () => {
