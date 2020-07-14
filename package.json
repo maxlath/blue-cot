@@ -20,7 +20,7 @@
     "config",
     "lib"
   ],
-  "version": "4.0.7",
+  "version": "4.0.8",
   "main": "lib/cot.js",
   "dependencies": {
     "node-fetch": "^2.6.0"
