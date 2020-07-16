@@ -1,12 +1,13 @@
 {
   "name": "blue-cot",
-  "description": "CouchDB library with a simple, functional-programing-friendly API, returning Bluebird promises",
+  "description": "CouchDB library with a simple, functional-programing-friendly API, returning promises",
   "keywords": [
     "couch",
     "couchdb",
     "promise",
-    "promises",
-    "bluebird"
+    "async",
+    "await",
+    "promises"
   ],
   "scripts": {
     "test": "mocha",
