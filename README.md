@@ -230,15 +230,15 @@ const { rows } = await db.allDocsKeys(keys, query)
 [Couchdb documentation](http://docs.couchdb.org/en/latest/api/database/bulk-api.html#post--db-_all_docs)
 
 #### fetch
-Takes doc ids, returns docs
+Takes doc ids, returns docs.
 ```js
-const docs = await db.fetch([ 'doc-1', 'doc-2', 'doc-3' ])
+const { docs, errors } = await db.fetch([ 'doc-1', 'doc-2', 'doc-3', 'some-non-existing-doc' ])
 docs[0]._id === 'doc-1' // true
 docs[1]._id === 'doc-2' // true
 docs[2]._id === 'doc-3' // true
+errors[0].key === 'some-non-existing-doc' // true
+errors[0].error === 'not_found' // true
 ```
-
-(That's pretty much the same thing as `db.allDocsKeys` but with the query object set to `{ include_docs: true }`)
 
 #### changes
 Queries the changes feed given the specified query. `query` may contain the following keys:

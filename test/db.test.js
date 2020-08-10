@@ -289,38 +289,34 @@ describe('DbHandle', () => {
         { _id: 'person-3', type: 'person', name: 'Jean Valjean' },
         { _id: 'person-4', type: 'person', name: 'Rose Tyler' }
       ])
-      const res = await db.fetch([ 'person-2', 'person-4' ])
-      res.should.be.an.Array()
-      res.length.should.equal(2)
-      res[0]._id.should.equal('person-2')
-      res[1]._id.should.equal('person-4')
+      const { docs, errors } = await db.fetch([ 'person-2', 'person-4' ])
+      docs.should.be.an.Array()
+      docs.length.should.equal(2)
+      docs[0]._id.should.equal('person-2')
+      docs[1]._id.should.equal('person-4')
+      errors.length.should.equal(0)
     })
 
-    it('should reject on missing doc', async () => {
+    it('should report missing docs as errors', async () => {
       await db.bulk([
         { _id: 'person-10', type: 'person', name: 'Bobby Lapointe' }
       ])
-      try {
-        await db.fetch([ 'person-10', 'person-unknown' ]).then(shouldNotBeCalled)
-      } catch (err) {
-        err.statusCode.should.equal(400)
-        err.context.errors.should.deepEqual([
-          { key: 'person-unknown', error: 'not_found' }
-        ])
-      }
+      const { docs, errors } = await db.fetch([ 'person-10', 'person-unknown' ])
+      docs.length.should.equal(1)
+      docs[0]._id.should.equal('person-10')
+      errors.length.should.equal(1)
+      errors[0].key.should.equal('person-unknown')
+      errors[0].error.should.equal('not_found')
     })
 
-    it('should reject on deleted doc', async () => {
+    it('should report deleted doc as errors', async () => {
       const { rev } = await db.post({ _id: 'person-8', type: 'person', name: 'Jean Valjean' })
       await db.delete('person-8', rev)
-      try {
-        await db.fetch([ 'person-8' ]).then(shouldNotBeCalled)
-      } catch (err) {
-        err.statusCode.should.equal(400)
-        err.context.errors.should.deepEqual([
-          { key: 'person-8', error: 'deleted' }
-        ])
-      }
+      const { docs, errors } = await db.fetch([ 'person-8' ])
+      docs.length.should.equal(0)
+      errors.should.deepEqual([
+        { key: 'person-8', error: 'deleted' }
+      ])
     })
   })
 
