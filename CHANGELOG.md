@@ -1,6 +1,9 @@
 # CHANGELOG
 *versions follow [SemVer](http://semver.org)*
 
+## 5.0.0 - 2020-08-10
+**BREAKING CHANGES**: [`db.fetch`](https://github.com/maxlath/blue-cot#fetch) now returns a { docs, errors } object
+
 ## 4.0.0 - 2019-12-31
 **BREAKING CHANGES**:
 * `blue-cot` doesn't return Bluebird promises (but you can easily [recover that feature](https://github.com/maxlath/blue-cot#with-bluebird))
@@ -34,7 +37,6 @@ New Features:
 
 ## 3.1.0 - 2017-01-14
 * Added [`db.fetch`](https://github.com/maxlath/blue-cot#fetch)
-* Added `db.fetch`
 
 ## 3.0.0 - 2017-01-14
 * Breaking change: removing constructors in favor of factory functions, breaking the module interface (see [Initialization](https://github.com/maxlath/blue-cot#initialization))
