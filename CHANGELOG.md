@@ -1,6 +1,9 @@
 # CHANGELOG
 *versions follow [SemVer](http://semver.org)*
 
+## 6.0.0 - 2020-08-10
+**BREAKING CHANGES**: [`db.update`](https://github.com/maxlath/blue-cot#update) stops to create empty (`{ _id }`) docs when the updated doc can't be found, rejecting with a 404 instead.
+
 ## 5.0.0 - 2020-08-10
 **BREAKING CHANGES**: [`db.fetch`](https://github.com/maxlath/blue-cot#fetch) now returns a { docs, errors } object
 
