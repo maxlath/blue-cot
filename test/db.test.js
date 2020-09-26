@@ -231,13 +231,15 @@ describe('DbHandle', () => {
       doc.b.should.equal(2)
     })
 
-    it('should create the doc if missing', async () => {
+    it('should not create the doc if missing', async () => {
       await db.update('does-not-exist', doc => {
         doc.hello = 123
         return doc
       })
-      const doc = await db.get('does-not-exist')
-      doc.hello.should.equal(123)
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.statusCode.should.equal(404)
+      })
     })
   })
 

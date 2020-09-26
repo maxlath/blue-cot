@@ -204,8 +204,6 @@ Gets the specified document, passes it to `updateFunction`, and then saves the r
 
 The process loops if there is an update conflict.
 
-If `updateFunction` needs to do asynchronous work, it may return a promise.
-
 #### bulk
 `POST /<dbName>/_bulk_docs`
   ```js
