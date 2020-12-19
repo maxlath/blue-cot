@@ -204,6 +204,11 @@ Gets the specified document, passes it to `updateFunction`, and then saves the r
 
 The process loops if there is an update conflict.
 
+By default, `db.update` only accepts to update existing docs, but this can be changed by setting `createIfMissing=true`:
+```js
+const res = await db.update(docId, updateFunction, { createIfMissing: true })
+```
+
 #### bulk
 `POST /<dbName>/_bulk_docs`
   ```js

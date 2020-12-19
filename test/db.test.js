@@ -231,7 +231,7 @@ describe('DbHandle', () => {
       doc.b.should.equal(2)
     })
 
-    it('should not create the doc if missing', async () => {
+    it('should not create the doc if missing by default', async () => {
       await db.update('does-not-exist', doc => {
         doc.hello = 123
         return doc
@@ -240,6 +240,15 @@ describe('DbHandle', () => {
       .catch(err => {
         err.statusCode.should.equal(404)
       })
+    })
+
+    it('should create the doc if missing, if requested', async () => {
+      await db.update('does-still-not-exist', doc => {
+        doc.hello = 456
+        return doc
+      }, { createIfMissing: true })
+      const doc = await db.get('does-still-not-exist')
+      doc.hello.should.equal(456)
     })
   })
 
