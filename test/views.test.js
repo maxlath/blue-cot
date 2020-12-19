@@ -14,7 +14,7 @@ describe('Views', function () {
       const docPromises = []
       let i = 1
       while (i < 10) {
-        let doc = {
+        const doc = {
           _id: `doc-${i}`,
           key: `key-${i}`
         }
