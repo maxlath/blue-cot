@@ -75,8 +75,8 @@ const config = {
   port: 5984,
 
   // Required if the database you are querying requires authentification
-  username: 'your-couchdb-username'
-  password: 'your-couchdb-password'
+  username: 'your-couchdb-username',
+  password: 'your-couchdb-password',
 
   // Optinonal
   // Logs the generated URLs, body, and response time
@@ -99,7 +99,7 @@ const db = getDbApi('some-db-name')
 
 ### with Bluebird
 From `v4.0.0`, `blue-cot` stopped returning [Bluebird](https://github.com/petkaantonov/bluebird) promises, but if you miss that feature, you can recover it by initializing `bluebird` before `blue-cot`:
-```
+```js
 global.Promise = require('bluebird')
 const bluecot = require('blue-cot')
 const getDbApi = bluecot(config)
@@ -343,7 +343,7 @@ const db = getDbApi('some-db-name', 'some-design-doc-name')
 ##### viewFindOneByKey
 ##### viewByKeys
 
-see [lib/view_functions](https://github.com/inventaire/blue-cot/blob/master/lib/view_functions.js)
+see [lib/view_functions](https://github.com/maxlath/blue-cot/blob/master/lib/view_functions.js)
 
 If you find this module useful, consider making a PR to improve the documentation
 
@@ -351,4 +351,4 @@ If you find this module useful, consider making a PR to improve the documentatio
 #### buildQueryString
 
 ## See also
-you might want to consider using [couchdb-nano](https://github.com/apache/couchdb-nano), the offical (but bloated ;p) CouchDB NodeJS lib
+you might want to consider using [couchdb-nano](https://github.com/apache/couchdb-nano), the now offical (but bloated ;p) CouchDB NodeJS lib
