@@ -1,6 +1,10 @@
 # CHANGELOG
 *versions follow [SemVer](http://semver.org)*
 
+## 6.2.0 - 2021-01-02
+* Added [`db.postIndex`](https://github.com/maxlath/blue-cot#postIndex)
+* Added [`db.find`](https://github.com/maxlath/blue-cot#find)
+
 ## 6.1.0 - 2020-09-28
 [`db.update`](https://github.com/maxlath/blue-cot#update): allow to set `createIfMissing=true`, allowing to recover the behavior from `< 6.0.0`
 
