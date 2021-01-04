@@ -408,6 +408,76 @@ describe('DbHandle', () => {
       doc.foo.should.equal(2)
     })
   })
+
+  describe('#postIndex', () => {
+    it('should create an index', async () => {
+      const res = await db.postIndex({
+        index: {
+          fields: [ 'type' ]
+        },
+        ddoc: 'test2',
+        name: 'by_type'
+      })
+      res.result.should.equal('created')
+    })
+
+    it('should update an index', async () => {
+      await db.postIndex({
+        index: {
+          fields: [ 'type' ]
+        },
+        ddoc: 'test2',
+        name: 'by_type'
+      })
+      const resB = await db.postIndex({
+        index: {
+          fields: [ 'type', 'foo' ]
+        },
+        ddoc: 'test2',
+        name: 'by_type'
+      })
+      resB.result.should.equal('created')
+    })
+  })
+
+  describe('#find', () => {
+    it('should find documents', async () => {
+      const res = await db.find({
+        selector: {
+          type: 'person'
+        },
+        execution_stats: true
+      })
+      const { docs, bookmark } = res
+      docs.should.be.an.Array()
+      docs.find(doc => doc._id === 'person-1').should.be.ok()
+      bookmark.should.be.a.String()
+    })
+
+    it('should reject requests triggering warning when specifying an index', async () => {
+      await db.find({
+        selector: { foo: 'bar' },
+        use_index: [ 'test', 'by_type' ]
+      })
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.message.should.equal('No matching index found')
+      })
+    })
+
+    it('should explain the result of a find query when passed the option explain=true', async () => {
+      const res = await db.find({
+        selector: {
+          type: 'person'
+        }
+      }, { explain: true })
+      res.dbname.should.be.a.String()
+      res.index.should.be.an.Object()
+      res.opts.should.be.an.Object()
+      res.mrargs.should.be.an.Object()
+      res.fields.should.be.a.String()
+    })
+  })
 })
 
 const randomUpdate = doc => {

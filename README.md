@@ -19,6 +19,8 @@ Forked from [Cot](https://github.com/willconant/cot-node), and renamed `blue-cot
     - [post](#post)
     - [put](#put)
     - [delete](#delete)
+    - [find](#find)
+    - [postIndex](#postindex)
     - [exists](#exists)
     - [batch](#batch)
     - [update](#update)
@@ -171,6 +173,57 @@ const res = await db.put(doc)
 if (!res.ok) {
   // something went wrong, possibly a conflict
 }
+```
+
+#### find
+`POST /<dbName>/_find_` (endpoint available in CouchDB `>= 2.0`)
+
+Takes a [`_find` query object](https://docs.couchdb.org/en/stable/api/database/find.html)
+
+```js
+const { docs, bookmark } = await db.find({
+  selector: {
+    year: { $gt: 2010 }
+  },
+  fields: [ '_id', '_rev', 'year', 'title' ],
+  sort: [ { year: 'asc' } ],
+  limit: 2,
+  skip: 0,
+  use_index: [ 'some_design_doc_name', 'some_index_name' ],
+  execution_stats: true
+})
+```
+
+By default, this function will throw if receiving a warning; this behavior can be disable by passing `strict=false`:
+```js
+const query = {
+  selector: {
+    year: { $gt: 2010 }
+  }
+}
+const { docs, bookmark, warning } = await db.find(query, { strict: false })
+```
+
+To send the same query to the [`_explain`](https://docs.couchdb.org/en/stable/api/database/find.html#db-explain) endpoint instead, use the `explain` flag:
+
+```js
+const query = {
+  selector: { name: 'foo' }
+}
+const { docs, bookmark, warning } = await db.find(query, { explain: true )
+```
+
+#### postIndex
+`POST /<dbName>/_index`
+
+```js
+const { result } = await db.postIndex({
+  index: {
+    fields: [ 'type' ]
+  },
+  ddoc: 'some_ddoc_name',
+  name: 'by_type'
+})
 ```
 
 #### exists
