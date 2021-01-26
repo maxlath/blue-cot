@@ -1,6 +1,12 @@
 require('should')
 const cot = require('../lib/cot')
 const config = require('config')
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+const randomUpdate = doc => {
+  doc.foo = Math.random()
+  return doc
+}
 
 const catch404 = err => {
   if (err.statusCode !== 404) throw err
@@ -479,10 +485,3 @@ describe('DbHandle', () => {
     })
   })
 })
-
-const randomUpdate = doc => {
-  doc.foo = Math.random()
-  return doc
-}
-
-const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
