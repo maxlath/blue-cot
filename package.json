@@ -21,7 +21,7 @@
     "config",
     "lib"
   ],
-  "version": "6.2.1",
+  "version": "6.2.2",
   "main": "lib/cot.js",
   "dependencies": {
     "node-fetch": "^2.6.0"
