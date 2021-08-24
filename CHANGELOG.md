@@ -16,7 +16,7 @@
 
 ## 4.0.0 - 2019-12-31
 **BREAKING CHANGES**:
-* `blue-cot` doesn't return Bluebird promises (but you can easily [recover that feature](https://github.com/maxlath/blue-cot#with-bluebird))
+* `blue-cot` returns native promises instead of Bluebird promises (but you can easily [recover that feature](https://github.com/maxlath/blue-cot#with-bluebird))
 * Config parameters changes:
   * Replaced `ssl` flag by `protocol` parameter
   * Renamed `user` -> `username`

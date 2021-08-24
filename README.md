@@ -1,6 +1,6 @@
 [CouchDB](http://couchdb.org/) library with a simple, functional-programing-friendly API.
 
-Forked from [Cot](https://github.com/willconant/cot-node), and renamed `blue-cot` in reference to the [Bluebird](https://github.com/petkaantonov/bluebird) promises it was returning until `v4.0.0`.
+Forked from [Cot](https://github.com/willconant/cot-node), and renamed `blue-cot` in reference to the [Bluebird](https://github.com/petkaantonov/bluebird) promises it was returning until `v4.0.0` (it returns native promises since).
 
 ## Summary
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
