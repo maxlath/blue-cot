@@ -2,8 +2,6 @@ const should = require('should')
 const cot = require('../lib/cot')
 const config = require('config')
 
-const mapFn = 'function(d) { emit(d.key, null); emit("z", null); }'
-
 describe('Views', function () {
   const db = cot(config.cot)(config.dbName, 'test')
 
@@ -26,7 +24,10 @@ describe('Views', function () {
         _id: '_design/test',
         views: {
           testView: {
-            map: mapFn
+            map: 'function (doc) { emit("z", null) }'
+          },
+          byKey: {
+            map: 'function (doc) { emit(doc.key, null) }'
           }
         }
       }
@@ -54,11 +55,23 @@ describe('Views', function () {
       })
       .then(() => done())
     })
+
+    it('should return rows by keys', function (done) {
+      db.view('test', 'byKey', {
+        keys: [ 'key-2', 'key-3' ],
+      })
+      .then(function (res) {
+        res.rows.length.should.equal(2)
+        res.rows[0].id.should.equal('doc-2')
+        res.rows[1].id.should.equal('doc-3')
+      })
+      .then(() => done())
+    })
   })
 
   describe('#viewFindOneByKey', function () {
     it('should return a unique doc', function (done) {
-      db.viewFindOneByKey('testView', 'key-1')
+      db.viewFindOneByKey('byKey', 'key-1')
       .then(function (doc) {
         doc._id.should.equal('doc-1')
         done()
