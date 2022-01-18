@@ -297,15 +297,13 @@ errors[0].error === 'not_found' // true
 ```
 
 #### changes
-Queries the changes feed given the specified query. `query` may contain the following keys:
-* `filter`: filter function to use
-* `include_docs`: if true, results will contain entire document
-* `limit`: the maximum number of change rows this query should return
-* `since`: results will start immediately after the sequence number provided here
-* `longpoll`: if true, query will send feed=longpoll
-* `timeout`: timeout in milliseconds for logpoll queries
+Queries the changes given the specified [query parameters](https://docs.couchdb.org/en/latest/api/database/changes.html).
 
-See [CouchDB changes feed documentation](http://wiki.apache.org/couchdb/HTTP_database_API#Changes)
+```js
+const latestChanges = await db.changes({ descending: true, limit: 10 })
+```
+
+:warning: the `feed` mode is not supported as a feed can not be returned as a stream. To follow a change feed, see [`cloudant-follow`](https://github.com/cloudant-labs/cloudant-follow)
 
 #### listRevs
 
@@ -359,24 +357,15 @@ const restoredDoc = await db.get(docId))
 ```js
 const { rows, total_rows, offset } = db.view(designName, viewName, query)
 ```
-Queries a view with the given name in the given design doc. `query` should be an object with any of the following keys:
-* descending
-* endkey
-* endkey_docid
-* group
-* group_level
-* include_docs
-* inclusive_end
-* key
-* limit
-* reduce
-* skip
-* stale
-* startkey
-* startkey_docid
-* update_seq
-
-For more information, refer to [Couchdb documentation](http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options)
+Queries a view with the given name in the given design doc. `query` should be an object with any of the [query parameters](https://docs.couchdb.org/en/latest/api/ddoc/views.html)
+```js
+const { rows } = await db.view('someDesignDocName', 'someViewName', {
+  keys: [ 'a', 'b', 'c' ],
+  include_docs: true,
+  limit: 5,
+  skip: 1
+})
+```
 
 #### viewQuery
 #### viewKeysQuery
