@@ -1,6 +1,11 @@
 # CHANGELOG
 *versions follow [SemVer](http://semver.org)*
 
+## 7.0.0 - 2022-01-18
+**BREAKING CHANGES**:
+- [view functions](https://github.com/maxlath/blue-cot#view) and [`db.changes`](https://github.com/maxlath/blue-cot#changes) now reject unkwown query parameters
+- [`db.changes`](https://github.com/maxlath/blue-cot#changes): removing `longpoll` parameter, has it's a feed flag, and the `db.changes` function doesn't not handle feeds (it doesn't play well with promises)
+
 ## 6.2.0 - 2021-01-02
 * Added [`db.postIndex`](https://github.com/maxlath/blue-cot#postIndex)
 * Added [`db.find`](https://github.com/maxlath/blue-cot#find)
