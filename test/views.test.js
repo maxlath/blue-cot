@@ -1,13 +1,115 @@
 const should = require('should')
 const cot = require('../lib/cot')
 const config = require('config')
-const { shouldNotBeCalled } = require('./utils')
+const { shouldNotBeCalled, catch404 } = require('./utils')
+
+describe('Validations', function () {
+  const db = cot(config.cot)(config.dbName, 'test')
+
+  describe('#viewCustom', function () {
+    it('should reject a call without a view name', async function () {
+      await db.viewCustom()
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.message.should.equal('invalid view name')
+      })
+    })
+
+    it('should reject a call without query object', async function () {
+      await db.viewCustom('byKey')
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.message.should.startWith('invalid query object')
+      })
+    })
+  })
+
+  describe('#viewByKeysCustom', function () {
+    it('should reject a call without a view name', async function () {
+      await db.viewByKeysCustom()
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.message.should.equal('invalid view name')
+      })
+    })
+
+    it('should reject a call without a keys array', async function () {
+      await db.viewByKeysCustom('byKey')
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.message.should.startWith('invalid keys array')
+      })
+    })
+
+    it('should reject a call without query object', async function () {
+      await db.viewByKeysCustom('byKey', [ 'foo' ])
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.message.should.startWith('invalid query object')
+      })
+    })
+  })
+
+  describe('#viewByKey', function () {
+    it('should reject a call without a view name', async function () {
+      await db.viewByKey()
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.message.should.equal('invalid view name')
+      })
+    })
+
+    it('should reject a call without a key', async function () {
+      await db.viewByKey('byKey')
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.message.should.equal('invalid key')
+      })
+    })
+  })
+
+  describe('#viewFindOneByKey', function () {
+    it('should reject a call without a view name', async function () {
+      await db.viewFindOneByKey()
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.message.should.equal('invalid view name')
+      })
+    })
+
+    it('should reject a call without a key', async function () {
+      await db.viewFindOneByKey('byKey')
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.message.should.equal('invalid key')
+      })
+    })
+  })
+
+  describe('#viewByKeys', function () {
+    it('should reject a call without a view name', async function () {
+      await db.viewByKeys()
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.message.should.equal('invalid view name')
+      })
+    })
+
+    it('should reject a call without keys array', async function () {
+      await db.viewByKeys('byKey')
+      .then(shouldNotBeCalled)
+      .catch(err => {
+        err.message.should.startWith('invalid keys array')
+      })
+    })
+  })
+})
 
 describe('Views', function () {
   const db = cot(config.cot)(config.dbName, 'test')
 
   beforeEach(async function () {
-    await db.request('DELETE', `/${config.dbName}`)
+    await db.request('DELETE', `/${config.dbName}`).catch(catch404)
     await db.request('PUT', `/${config.dbName}`)
 
     const docPromises = []

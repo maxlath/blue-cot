@@ -21,6 +21,7 @@ describe('DbHandle', () => {
 
   beforeEach(async () => {
     await db.request('DELETE', `/${config.dbName}`).catch(catch404)
+    await wait(10)
     await db.request('PUT', `/${config.dbName}`)
     if (config.cot.user) await putSecurityDoc(db)
 
