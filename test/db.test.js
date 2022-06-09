@@ -98,7 +98,7 @@ describe('DbHandle', () => {
 
     it('should throw an error if no document id is passed', async () => {
       try {
-        await db.delete().then(shouldNotBeCalled)
+        await db.delete(null, '2-foo').then(shouldNotBeCalled)
       } catch (err) {
         err.name.should.equal('TypeError')
         err.message.should.equal('invalid doc id')
