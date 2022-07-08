@@ -284,7 +284,10 @@ describe('DbHandle', () => {
       try {
         await db.bulk([ doc ]).then(shouldNotBeCalled)
       } catch (err) {
-        err.statusCode.should.equal(400)
+        err.statusCode.should.equal(409)
+        err.context.body.should.deepEqual([
+          { id: 'blu', error: 'conflict', reason: 'Document update conflict.' }
+        ])
       }
     })
   })
