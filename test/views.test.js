@@ -63,7 +63,7 @@ describe('Validations', function () {
       await db.viewByKey('byKey')
       .then(shouldNotBeCalled)
       .catch(err => {
-        err.message.should.equal('invalid key')
+        err.message.should.equal('missing key')
       })
     })
   })
@@ -81,7 +81,7 @@ describe('Validations', function () {
       await db.viewFindOneByKey('byKey')
       .then(shouldNotBeCalled)
       .catch(err => {
-        err.message.should.equal('invalid key')
+        err.message.should.equal('missing key')
       })
     })
   })
