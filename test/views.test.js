@@ -1,7 +1,7 @@
-const should = require('should')
-const cot = require('../lib/cot')
-const config = require('config')
-const { shouldNotBeCalled, catch404 } = require('./utils')
+import should from 'should'
+import cot from '../lib/cot.js'
+import config from 'config'
+import { shouldNotBeCalled, catch404 } from './utils.js'
 
 describe('Validations', function () {
   const db = cot(config.cot)(config.dbName, 'test')

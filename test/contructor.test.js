@@ -1,5 +1,5 @@
-require('should')
-const cot = require('../lib/cot')
+import 'should'
+import cot from '../lib/cot.js'
 
 describe('cot', () => {
   it('should return a db handler function when passed a db name', () => {

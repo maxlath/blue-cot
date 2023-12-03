@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "target": "esnext",
+    "moduleResolution": "nodenext",
+    "checkJs": true,
+    "skipLibCheck": true,
+  },
+  "include": [ "lib", "test" ],
+}

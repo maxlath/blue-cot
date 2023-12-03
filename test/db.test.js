@@ -1,7 +1,7 @@
-require('should')
-const cot = require('../lib/cot')
-const config = require('config')
-const { wait, catch404, shouldNotBeCalled } = require('./utils')
+import 'should'
+import cot from '../lib/cot.js'
+import config from 'config'
+import { wait, catch404, shouldNotBeCalled } from './utils.js'
 
 const randomUpdate = doc => {
   doc.foo = Math.random()
