@@ -1,27 +1,33 @@
 import { Agent as httpAgent } from 'node:http'
 import { Agent as httpsAgent } from 'node:https'
 
-export default ({ protocol, hostname, port, username, password, debug }) => {
-  const config = {}
+export interface ConfigParams {
+  protocol: string
+  hostname: string
+  port: number
+  username: string
+  password: string
+  debug?: boolean
+}
 
+export default ({ protocol, hostname, port, username, password, debug }: ConfigParams) => {
   if (!(protocol === 'http' || protocol === 'https')) {
     throw new Error(`invalid protocol: ${protocol}`)
   }
 
-  config.host = `${protocol}://${hostname}:${port}`
-  config.username = username
-  config.password = password
-
-  config.hostHeader = hostname
-
-  config.agent = config.agent || getAgent(protocol)
+  const config = {
+    host: `${protocol}://${hostname}:${port}`,
+    username,
+    password,
+    hostHeader: hostname,
+    agent: getAgent(protocol),
+    // Making sure it's a boolean, defaulting to false
+    debug: debug === true,
+  }
 
   const nonStandardPort = protocol === 'http' ? port !== 80 : port !== 443
 
   if (nonStandardPort) config.hostHeader += ':' + port
-
-  // Making sure it's a boolean, defaulting to false
-  config.debug = debug === true
 
   return config
 }

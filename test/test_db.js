@@ -1,5 +1,5 @@
-import cot from '../lib/cot.js'
 import config from 'config'
+import cot from '../dist/lib/cot.js'
 import { catch404, wait } from './utils.js'
 
 let testDb
@@ -12,7 +12,7 @@ const getTestDb = () => {
 const putSecurityDoc = () => {
   const doc = {
     admins: { names: [ config.cot.user ] },
-    members: { names: [ config.cot.user ] }
+    members: { names: [ config.cot.user ] },
   }
   return testDb.request('PUT', `/${config.dbName}/_security`, doc)
 }
@@ -30,7 +30,7 @@ const resetTestDb = async function () {
   while (i < 10) {
     const doc = {
       _id: `doc-${i}`,
-      key: `key-${i}`
+      key: `key-${i}`,
     }
     docPromises.push(testDb.post(doc))
     i++
@@ -40,12 +40,12 @@ const resetTestDb = async function () {
     _id: '_design/test',
     views: {
       testView: {
-        map: 'function(d) { emit(d.name, null) }'
+        map: 'function(d) { emit(d.name, null) }',
       },
       byKey: {
-        map: 'function (doc) { emit(doc.key, null) }'
-      }
-    }
+        map: 'function (doc) { emit(doc.key, null) }',
+      },
+    },
   }
 
   docPromises.push(testDb.post(designDoc))

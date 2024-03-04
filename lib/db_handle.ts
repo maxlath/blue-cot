@@ -1,38 +1,15 @@
 import querystring from 'node:querystring'
 import errors_ from './errors.js'
-import { recover } from './recover_version.js'
-import { isPlainObject, validateString, validateArray, validatePlainObject } from './utils.js'
 import { changesQueryKeys, viewQueryKeys } from './query_keys.js'
+import { isPlainObject, validateString, validateArray, validatePlainObject, isIdentifiedDocument } from './utils.js'
+import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertResponse, DocumentLookupFailure, DocumentViewParams, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse } from '../types/nano.js'
+import type { DocId, DocRev, DocTranformer, FetchOptions, FindOptions, FindQuery, JsonRequest, NewDoc, TestFunction, RecoveredDoc, UpdateOptions, ViewKey, DocumentDeletedFailure, RevInfo, DocumentRevertResponse } from 'types/types.js'
 
-/**
- * @typedef { import('../types/types.d.ts').DocId } DocId
- * @typedef { import('../types/types.d.ts').DocRev } DocRev
- * @typedef { import('../types/types.d.ts').Doc } Doc
- * @typedef { import('../types/types.d.ts').DocTranformer } DocTranformer
- * @typedef { import('../types/types.d.ts').UpdateOptions } UpdateOptions
- * @typedef { import('../types/types.d.ts').ViewQuery } ViewQuery
- * @typedef { import('../types/types.d.ts').ChangesQuery } ChangesQuery
- * @typedef { import('../types/types.d.ts').FindQuery } FindQuery
- * @typedef { import('../types/types.d.ts').ViewKeys } ViewKeys
- * @typedef { import('../types/types.d.ts').FetchOptions } FetchOptions
- * @typedef { import('../types/types.d.ts').TestFunction } TestFunction
- * @typedef { import('../types/types.d.ts').FindOptions } FindOptions
- * @typedef { import('../types/types.d.ts').IndexDoc } IndexDoc
- * @typedef { import('../types/types.d.ts').JsonRequest } JsonRequest
- */
-
-/**
-  * @param {JsonRequest} jsonRequest
-  * @param {DocRev} [docRev]
-  */
-export default function (jsonRequest, dbName) {
+export default function (jsonRequest: JsonRequest, dbName: string) {
   validateString(dbName, 'dbName')
 
-  const API = {
-    /**
-     * @param {DocId} docId
-     */
-    docUrl: docId => {
+  const db = {
+    docUrl: (docId: DocId) => {
       validateString(docId, 'doc id')
       if (docId.indexOf('_design/') === 0) {
         return '/' + dbName + '/_design/' + encodeURIComponent(docId.substr(8))
@@ -42,28 +19,21 @@ export default function (jsonRequest, dbName) {
     },
 
     info: async () => {
-      const res = await jsonRequest('GET', `/${dbName}`)
+      const res = await jsonRequest<InfoResponse>('GET', `/${dbName}`)
       return res.data
     },
 
-    /**
-     * @param {DocId} docId
-     * @param {DocRev} [docRev]
-     */
-    get: async (docId, docRev) => {
-      let url = API.docUrl(docId)
+    get: async (docId: DocId, docRev?: DocRev) => {
+      let url = db.docUrl(docId)
       if (typeof docRev === 'string') url += `?rev=${docRev}`
-      const res = await jsonRequest('GET', url)
+      const res = await jsonRequest<DocumentGetResponse>('GET', url)
       if (res.statusCode === 200) return res.data
       else throw errors_.buildFromRes(res, `error getting doc ${docId}`)
     },
 
-    /**
-     * @param {DocId} docId
-     */
-    exists: async docId => {
+    exists: async (docId: DocId) => {
       try {
-        const res = await jsonRequest('GET', API.docUrl(docId))
+        const res = await jsonRequest<DocumentGetResponse>('GET', db.docUrl(docId))
         if (res.statusCode === 200) return true
         else throw errors_.buildFromRes(res, `error getting doc ${docId}`)
       } catch (err) {
@@ -72,54 +42,39 @@ export default function (jsonRequest, dbName) {
       }
     },
 
-    /**
-     * @param {Doc} doc
-     */
-    put: async doc => {
+    put: async (doc: IdentifiedDocument | RecoveredDoc) => {
       validatePlainObject(doc, 'doc')
-      const res = await jsonRequest('PUT', API.docUrl(doc._id), doc)
+      const res = await jsonRequest<DocumentInsertResponse>('PUT', db.docUrl(doc._id), doc)
       if (res.statusCode === 200 || res.statusCode === 201) return res.data
       else throw errors_.buildFromRes(res, `error putting doc ${doc._id}`)
     },
 
-    /**
-     * @param {Doc} doc
-     */
-    post: async doc => {
+    post: async (doc: NewDoc) => {
       validatePlainObject(doc, 'doc')
-      const res = await jsonRequest('POST', `/${dbName}`, doc)
+      const res = await jsonRequest<DocumentInsertResponse>('POST', `/${dbName}`, doc)
       if (res.statusCode === 201) {
         return res.data
-      } else if (doc._id) {
+      } else if (isIdentifiedDocument(doc)) {
         throw errors_.buildFromRes(res, `error posting doc ${doc._id}`)
       } else {
         throw errors_.buildFromRes(res, 'error posting new doc')
       }
     },
 
-    /**
-     * @param {Doc} doc
-     */
-    batch: async doc => {
+    batch: async (doc: Document) => {
       validatePlainObject(doc, 'doc')
       const path = `/${dbName}?batch=ok`
-      const res = await jsonRequest('POST', path, doc)
+      const res = await jsonRequest<DocumentInsertResponse>('POST', path, doc)
       if (res.statusCode === 202) {
         return res.data
-      } else if (doc._id) {
+      } else if (isIdentifiedDocument(doc)) {
         throw errors_.buildFromRes(res, `error batch posting doc ${doc._id}`)
       } else {
         throw errors_.buildFromRes(res, 'error batch posting new doc')
       }
     },
 
-    /**
-     * @param {DocId} docId
-     * @param {DocTranformer} fn
-     * @param {UpdateOptions | null} options
-     */
-    update: async (docId, fn, options = {}) => {
-      const db = API
+    update: async (docId: DocId, fn: DocTranformer, options: UpdateOptions = {}): Promise<DocumentInsertResponse> => {
       let attempt = 0
       const { createIfMissing } = options
       const tryIt = async () => {
@@ -132,8 +87,8 @@ export default function (jsonRequest, dbName) {
           else throw err
         }
         try {
-          const res = await db.put(fn(doc))
-          if (res.ok) return res
+          const data = await db.put(fn(doc))
+          if (data.ok) return data
           else return tryIt()
         } catch (err) {
           if (err.statusCode === 409) return tryIt()
@@ -143,48 +98,37 @@ export default function (jsonRequest, dbName) {
       return tryIt()
     },
 
-    /**
-     * @param {DocId} docId
-     * @param {DocRev} rev
-     */
-    delete: async (docId, rev) => {
+    delete: async (docId: DocId, rev: DocRev) => {
       validateString(rev, 'rev')
-      const url = API.docUrl(docId) + '?rev=' + encodeURIComponent(rev)
-      const res = await jsonRequest('DELETE', url)
+      const url = db.docUrl(docId) + '?rev=' + encodeURIComponent(rev)
+      const res = await jsonRequest<DocumentDestroyResponse>('DELETE', url)
       if (res.statusCode === 200) return res.data
       else throw errors_.buildFromRes(res, `error deleting doc ${docId}`)
     },
 
     // Based on http://stackoverflow.com/a/16827094/3324977
-    /**
-     * @param {DocId} docId
-     */
-    undelete: async docId => {
+    undelete: async (docId: DocId) => {
       validateString(docId, 'doc id')
       try {
         // Verify that it's indeed a deleted document: if get doesn't throw, there is nothing to undelete
-        await API.get(docId)
+        await db.get(docId)
         throw errors_.new("can't undelete an non-deleted document", 400, docId)
       } catch (err) {
         if (err.statusCode !== 404 || err.body.reason !== 'deleted') throw err
 
-        const url = API.docUrl(docId) + '?revs=true&open_revs=all'
-        const res = await jsonRequest('GET', url)
+        const url = db.docUrl(docId) + '?revs=true&open_revs=all'
+        const res = await jsonRequest<DocumentGetResponse>('GET', url)
         const data = res.data[0].ok
         const preDeleteRevNum = data._revisions.start - 1
         const preDeleteRevId = data._revisions.ids[1]
         const preDeleteRev = preDeleteRevNum + '-' + preDeleteRevId
-        const preDeleteDoc = await API.get(docId, preDeleteRev)
-        // Re-created documents shouldn't have a rev, see https://github.com/apache/couchdb/issues/3177
+        const preDeleteDoc: RecoveredDoc = await db.get(docId, preDeleteRev)
         delete preDeleteDoc._rev
-        return API.put(preDeleteDoc)
+        return db.put(preDeleteDoc)
       }
     },
 
-    /**
-     * @param {Doc[]} docs
-     */
-    bulk: async docs => {
+    bulk: async (docs: Document[]) => {
       validateArray(docs, 'docs')
       const url = `/${dbName}/_bulk_docs`
 
@@ -197,7 +141,7 @@ export default function (jsonRequest, dbName) {
         }
       }
 
-      const res = await jsonRequest('POST', url, { docs })
+      const res = await jsonRequest<DocumentBulkResponse[]>('POST', url, { docs })
       if (res.statusCode !== 201) throw errors_.buildFromRes(res, 'error posting to _bulk_docs')
 
       for (const part of res.data) {
@@ -209,152 +153,102 @@ export default function (jsonRequest, dbName) {
       return res.data
     },
 
-    /**
-     * @param {ViewQuery | null} query
-     */
-    buildQueryString: query => buildSanitizedQueryString(query, viewQueryKeys),
+    buildQueryString: (query?: DocumentViewParams) => buildSanitizedQueryString(query, viewQueryKeys),
 
-    /**
-     * @param {string} path
-     * @param {ViewQuery | null} query
-     */
-    viewQuery: async (path, query) => {
-      const qs = API.buildQueryString(query)
+    viewQuery: async <V, D>(path: string, query?: DocumentViewParams) => {
+      const qs = db.buildQueryString(query)
       const url = `/${dbName}/${path}?${qs}`
-      const res = await jsonRequest('GET', url)
+      const res = await jsonRequest<DocumentViewResponse<V, D>>('GET', url)
       if (res.statusCode === 200) return res.data
       else throw errors_.buildFromRes(res, `error reading view ${path}`)
     },
 
-    /**
-     * @param {string} designName
-     * @param {string} viewName
-     * @param {ViewQuery | null} query
-     */
-    view: async (designName, viewName, query) => {
+    view: async (designName: string, viewName: string, query: DocumentViewParams) => {
       validateString(designName, 'design doc name')
       validateString(viewName, 'view name')
       validatePlainObject(query, 'query')
-      return API.viewQuery(`_design/${designName}/_view/${viewName}`, query)
+      return db.viewQuery(`_design/${designName}/_view/${viewName}`, query)
     },
 
-    /**
-     * @param {ViewQuery | null} query
-     */
-    allDocs: async query => {
-      return API.viewQuery('_all_docs', query)
+    allDocs: async (query?: DocumentViewParams) => {
+      return db.viewQuery('_all_docs', query)
     },
 
-    /**
-     * @param {string} path
-     * @param {ViewKeys} keys
-     * @param {ViewQuery | null} query
-     */
-    viewKeysQuery: async (path, keys, query = {}) => {
+    viewKeysQuery: async <V, D>(path: string, keys: ViewKey[], query: DocumentViewParams = {}) => {
       validateString(path, 'path')
       validateArray(keys, 'keys')
-      const qs = API.buildQueryString(query)
+      const qs = db.buildQueryString(query)
       const url = `/${dbName}/${path}?${qs}`
-      const res = await jsonRequest('POST', url, { keys })
+      const res = await jsonRequest<DocumentViewResponse<V, D>>('POST', url, { keys })
       if (res.statusCode === 200) return res.data
       else throw errors_.buildFromRes(res, `error reading view ${path}`)
     },
 
-    /**
-     * @param {string} designName
-     * @param {string} viewName
-     * @param {ViewKeys} keys
-     * @param {ViewQuery | null} query
-     */
-    viewKeys: async (designName, viewName, keys, query) => {
+    viewKeys: async (designName: string, viewName: string, keys: ViewKey[], query?: DocumentViewParams) => {
       validateString(designName, 'design doc name')
       validateString(viewName, 'view name')
       validateArray(keys, 'keys')
       validatePlainObject(query, 'query')
       const path = `_design/${designName}/_view/${viewName}`
-      return API.viewKeysQuery(path, keys, query)
+      return db.viewKeysQuery(path, keys, query)
     },
 
-    /**
-     * @param {ViewKeys} keys
-     * @param {ViewQuery | null} query
-     */
-    // http://docs.couchdb.org/en/latest/api/database/bulk-api.html#post--db-_all_docs
-    allDocsKeys: async (keys, query) => {
-      return API.viewKeysQuery('_all_docs', keys, query)
+    // http://docs.couchdb.org/en/latest/db/database/bulk-db.html#post--db-_all_docs
+    allDocsKeys: async (keys: ViewKey[], query: DocumentViewParams) => {
+      return db.viewKeysQuery('_all_docs', keys, query)
     },
 
-    /**
-     * @param {ViewKeys} keys
-     * @param {FetchOptions | null} options
-     */
-    fetch: async (keys, options) => {
+    fetch: async <D>(keys: ViewKey[], options?: FetchOptions) => {
       validateArray(keys, 'keys')
       const throwOnErrors = options != null && options.throwOnErrors === true
-      const { rows } = await API.viewKeysQuery('_all_docs', keys, { include_docs: true })
-      const docs = []
-      const errors = []
+      const { rows }: { rows: DocumentFetchResponse<D>['rows'] } = await db.viewKeysQuery<any, D>('_all_docs', keys, { include_docs: true })
+      const docs: D[] = []
+      const errors: (DocumentLookupFailure | DocumentDeletedFailure)[] = []
       for (const row of rows) {
-        if (row.error) errors.push(row)
+        if (isDocumentLookupFailure(row)) errors.push(row)
+        // @ts-expect-error Property 'deleted' does not exist on type '{ rev: string; }'.ts(2339)
         else if (row.value.deleted) errors.push({ key: row.key, error: 'deleted' })
-        else docs.push(row.doc)
+        else docs.push(row.doc as D)
       }
       if (throwOnErrors && errors.length > 0) throw errors_.new('docs fetch errors', 400, { keys, errors })
       return { docs, errors }
     },
 
-    /**
-     * @param {DocId} docId
-     */
-    listRevs: async docId => {
-      const url = API.docUrl(docId) + '?revs_info=true'
-      const res = await jsonRequest('GET', url)
-      return res.data._revs_info
+    listRevs: async (docId: DocId) => {
+      const url = db.docUrl(docId) + '?revs_info=true'
+      const res = await jsonRequest<DocumentGetResponse>('GET', url)
+      return res.data._revs_info as RevInfo[]
     },
 
-    /**
-     * @param {DocId} docId
-     */
-    revertLastChange: async docId => {
-      const revsInfo = await API.listRevs(docId)
+    revertLastChange: async (docId: DocId) => {
+      const revsInfo = await db.listRevs(docId)
       const currentRevInfo = revsInfo[0]
       // Select only the previous one
       const candidatesRevsInfo = revsInfo.slice(1, 2)
-      return recover(API, docId, candidatesRevsInfo, currentRevInfo)
+      return db.recover(docId, candidatesRevsInfo, currentRevInfo)
     },
 
-    /**
-     * @param {DocId} docId
-     * @param {TestFunction} testFn
-     */
-    revertToLastVersionWhere: async (docId, testFn) => {
-      const revsInfo = await API.listRevs(docId)
+    revertToLastVersionWhere: async (docId: DocId, testFn: TestFunction) => {
+      const revsInfo = await db.listRevs(docId)
       const currentRevInfo = revsInfo[0]
       const candidatesRevsInfo = revsInfo.slice(1)
-      return recover(API, docId, candidatesRevsInfo, currentRevInfo, testFn)
+      return db.recover(docId, candidatesRevsInfo, currentRevInfo, testFn)
     },
 
-    /**
-     * @param {ChangesQuery | null} query
-     */
-    changes: async (query = {}) => {
+    changes: async (query: DatabaseChangesParams = {}) => {
       const qs = buildSanitizedQueryString(query, changesQueryKeys)
       const path = `/${dbName}/_changes?${qs}`
 
-      const res = await jsonRequest('GET', path)
+      const res = await jsonRequest<DatabaseChangesResponse>('GET', path)
       if (res.statusCode === 200) return res.data
       else throw errors_.buildFromRes(res, 'error reading _changes')
     },
 
-    /**
-     * @param {FindQuery | null} query
-     * @param {FindOptions | null} options
-     */
-    find: async (query = {}, options = {}) => {
+    find: async <D>(query: FindQuery = {}, options: FindOptions = {}) => {
       let endpoint = '_find'
       if (options.explain) endpoint = '_explain'
       const path = `/${dbName}/${endpoint}`
-      const res = await jsonRequest('POST', path, query)
+      const res = await jsonRequest<MangoResponse<D>>('POST', path, query)
       if (res.statusCode === 200) {
         const { warning } = res.data
         if (query.use_index != null && warning != null && warning.includes('No matching index found')) {
@@ -367,18 +261,37 @@ export default function (jsonRequest, dbName) {
       }
     },
 
-    /**
-     * @param {IndexDoc} indexDoc
-     */
-    postIndex: async indexDoc => {
+    postIndex: async (indexDoc: CreateIndexRequest) => {
       validatePlainObject(indexDoc, 'index doc')
-      const res = await jsonRequest('POST', `/${dbName}/_index`, indexDoc)
+      const res = await jsonRequest<CreateIndexResponse>('POST', `/${dbName}/_index`, indexDoc)
       if (res.statusCode === 200 || res.statusCode === 201) return res.data
       else throw errors_.buildFromRes(res, 'postIndex error')
-    }
+    },
+
+    recover: async (docId: DocId, candidatesRevsInfo: RevInfo[], currentRevInfo: RevInfo, testFn?: TestFunction) => {
+      const previousRevInfo = candidatesRevsInfo.shift()
+
+      if (previousRevInfo == null) {
+        throw errors_.new('no previous version could be found', 400, { docId, candidatesRevsInfo, currentRevInfo })
+      }
+
+      if (previousRevInfo.status !== 'available') {
+        throw errors_.new('previous version isnt available', 400, { docId, candidatesRevsInfo, currentRevInfo })
+      }
+
+      const targetVersion = await db.get(docId, previousRevInfo.rev)
+      if (typeof testFn === 'function' && !testFn(targetVersion)) {
+        return db.recover(docId, candidatesRevsInfo, currentRevInfo, testFn)
+      }
+      const revertRev = targetVersion._rev
+      targetVersion._rev = currentRevInfo.rev
+      const res: DocumentRevertResponse = await db.put(targetVersion)
+      res.revert = revertRev
+      return res
+    },
   }
 
-  return API
+  return db
 }
 
 const buildSanitizedQueryString = (query = {}, queryKeys) => {
@@ -404,4 +317,8 @@ const validateQueryKey = (queryKeys, key, query) => {
   if (queryKeys[key] == null) {
     throw errors_.new('invalid query key', 400, { key, query, validKeys: Object.keys(queryKeys) })
   }
+}
+
+function isDocumentLookupFailure (row): row is DocumentLookupFailure {
+  return row.error != null
 }

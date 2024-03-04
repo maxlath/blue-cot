@@ -1,4 +1,5 @@
 import request from './request.js'
+
 let sessionCookieRequests = 0
 
 export default async config => {
@@ -13,10 +14,10 @@ export default async config => {
     headers: {
       'content-type': 'application/json',
       // Required by old CouchDB (ex: v1.6.1)
-      Authorization: `Basic ${getBasicCredentials(username, password)}`
+      Authorization: `Basic ${getBasicCredentials(username, password)}`,
     },
     agent,
-    body: JSON.stringify({ name: username, password })
+    body: JSON.stringify({ name: username, password }),
   })
 
   if (res.status >= 400) {

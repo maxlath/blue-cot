@@ -1,6 +1,6 @@
 import 'should'
-import cot from '../lib/cot.js'
 import config from 'config'
+import cot from '../dist/lib/cot.js'
 import { wait, catch404, shouldNotBeCalled } from './utils.js'
 
 const randomUpdate = doc => {
@@ -11,7 +11,7 @@ const randomUpdate = doc => {
 const putSecurityDoc = db => {
   const doc = {
     admins: { names: [ config.cot.user ] },
-    members: { names: [ config.cot.user ] }
+    members: { names: [ config.cot.user ] },
   }
   return db.request('PUT', `/${config.dbName}/_security`, doc)
 }
@@ -28,16 +28,16 @@ describe('DbHandle', () => {
     await db.post({
       _id: 'person-1',
       type: 'person',
-      name: 'Will Conant'
+      name: 'Will Conant',
     })
 
     await db.post({
       _id: '_design/test',
       views: {
         testView: {
-          map: 'function(d) { emit(d.name, null) }'
-        }
-      }
+          map: 'function(d) { emit(d.name, null) }',
+        },
+      },
     })
   })
 
@@ -253,7 +253,7 @@ describe('DbHandle', () => {
       const res = await db.bulk([
         { _id: 'person-2', type: 'person', name: 'Bobby Lapointe' },
         { _id: 'person-3', type: 'person', name: 'Jean Valjean' },
-        { _id: 'person-4', type: 'person', name: 'Rose Tyler' }
+        { _id: 'person-4', type: 'person', name: 'Rose Tyler' },
       ])
       res.length.should.equal(3)
       res.should.be.an.Array()
@@ -266,7 +266,7 @@ describe('DbHandle', () => {
       try {
         await db.bulk([
           { _id: 'bla', type: 'person', name: 'Jolyn' },
-          null
+          null,
         ])
         .then(shouldNotBeCalled)
       } catch (err) {
@@ -286,7 +286,7 @@ describe('DbHandle', () => {
       } catch (err) {
         err.statusCode.should.equal(409)
         err.context.body.should.deepEqual([
-          { id: 'blu', error: 'conflict', reason: 'Document update conflict.' }
+          { id: 'blu', error: 'conflict', reason: 'Document update conflict.' },
         ])
       }
     })
@@ -297,7 +297,7 @@ describe('DbHandle', () => {
       await db.bulk([
         { _id: 'person-2', type: 'person', name: 'Bobby Lapointe' },
         { _id: 'person-3', type: 'person', name: 'Jean Valjean' },
-        { _id: 'person-4', type: 'person', name: 'Rose Tyler' }
+        { _id: 'person-4', type: 'person', name: 'Rose Tyler' },
       ])
       const { docs, errors } = await db.fetch([ 'person-2', 'person-4' ])
       docs.should.be.an.Array()
@@ -309,7 +309,7 @@ describe('DbHandle', () => {
 
     it('should report missing docs as errors', async () => {
       await db.bulk([
-        { _id: 'person-10', type: 'person', name: 'Bobby Lapointe' }
+        { _id: 'person-10', type: 'person', name: 'Bobby Lapointe' },
       ])
       const { docs, errors } = await db.fetch([ 'person-10', 'person-unknown' ])
       docs.length.should.equal(1)
@@ -325,7 +325,7 @@ describe('DbHandle', () => {
       const { docs, errors } = await db.fetch([ 'person-8' ])
       docs.length.should.equal(0)
       errors.should.deepEqual([
-        { key: 'person-8', error: 'deleted' }
+        { key: 'person-8', error: 'deleted' },
       ])
     })
   })
@@ -412,10 +412,10 @@ describe('DbHandle', () => {
     it('should create an index', async () => {
       const res = await db.postIndex({
         index: {
-          fields: [ 'type' ]
+          fields: [ 'type' ],
         },
         ddoc: 'test2',
-        name: 'by_type'
+        name: 'by_type',
       })
       res.result.should.equal('created')
     })
@@ -423,17 +423,17 @@ describe('DbHandle', () => {
     it('should update an index', async () => {
       await db.postIndex({
         index: {
-          fields: [ 'type' ]
+          fields: [ 'type' ],
         },
         ddoc: 'test2',
-        name: 'by_type'
+        name: 'by_type',
       })
       const resB = await db.postIndex({
         index: {
-          fields: [ 'type', 'foo' ]
+          fields: [ 'type', 'foo' ],
         },
         ddoc: 'test2',
-        name: 'by_type'
+        name: 'by_type',
       })
       resB.result.should.equal('created')
     })
@@ -443,9 +443,9 @@ describe('DbHandle', () => {
     it('should find documents', async () => {
       const res = await db.find({
         selector: {
-          type: 'person'
+          type: 'person',
         },
-        execution_stats: true
+        execution_stats: true,
       })
       const { docs, bookmark } = res
       docs.should.be.an.Array()
@@ -456,7 +456,7 @@ describe('DbHandle', () => {
     it('should reject requests triggering warning when specifying an index', async () => {
       await db.find({
         selector: { foo: 'bar' },
-        use_index: [ 'test', 'by_type' ]
+        use_index: [ 'test', 'by_type' ],
       })
       .then(shouldNotBeCalled)
       .catch(err => {
@@ -467,8 +467,8 @@ describe('DbHandle', () => {
     it('should explain the result of a find query when passed the option explain=true', async () => {
       const res = await db.find({
         selector: {
-          type: 'person'
-        }
+          type: 'person',
+        },
       }, { explain: true })
       res.dbname.should.be.a.String()
       res.index.should.be.an.Object()

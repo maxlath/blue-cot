@@ -11,9 +11,10 @@
     "promises"
   ],
   "scripts": {
-    "test": "mocha",
-    "test-watch": "mocha --watch",
+    "build": "./scripts/build.sh",
+    "test": "./scripts/build.sh && mocha",
     "lint": "eslint lib test",
+    "lint-fix": "eslint --fix lib test",
     "git-pre-commit": "npm run lint && npm test",
     "prepublishOnly": "npm run lint && npm test",
     "postpublish": "git push --tags",
@@ -21,15 +22,18 @@
   },
   "files": [
     "config",
-    "lib"
+    "dist",
+    "lib",
+    "types"
   ],
   "version": "7.0.3",
-  "main": "lib/cot.js",
+  "main": "dist/lib/cot.js",
   "dependencies": {
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "typescript": "^5.3.3"
   },
   "engines": {
-    "node": ">= 8"
+    "node": ">= 16"
   },
   "author": {
     "name": "maxlath",
@@ -41,13 +45,17 @@
   },
   "forkedFrom": "http://github.com/willconant/cot-node",
   "devDependencies": {
+    "@types/mocha": "^10.0.6",
     "@types/node": "^20.10.3",
+    "@typescript-eslint/eslint-plugin": "^7.1.1",
+    "@typescript-eslint/parser": "^7.1.1",
     "@vercel/git-hooks": "^1.0.0",
     "config": "^3.2.4",
-    "eslint": "^8.55.0",
+    "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-node-import": "^1.0.4",
     "eslint-plugin-promise": "^6.1.1",
     "mocha": "^10.2.0",
     "should": "^13.2.3"

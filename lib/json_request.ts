@@ -1,9 +1,16 @@
-import request from './request.js'
 import getSessionCookie from './get_session_cookie.js'
+import request from './request.js'
+import type { Agent } from 'node:http'
+import type { FormattedError } from 'types/types.js'
 
-/**
- * @typedef { import('../types/types.d.ts').FormattedError } FormattedError
- */
+interface JsonRequestParams {
+  method: string,
+  headers: Record<string, string>,
+  agent: Agent,
+  attempt: number
+  start?: number
+  body?: string
+}
 
 export function jsonRequestFactory (config) {
   const { host, debug, agent } = config
@@ -12,16 +19,16 @@ export function jsonRequestFactory (config) {
   // are re-requested only when needed
   const headers = {
     accept: 'application/json',
-    host: config.hostHeader
+    host: config.hostHeader,
   }
 
-  return async function jsonRequest (method, path, body) {
+  return async function jsonRequest<ResponseBody> (method, path, body) {
     const url = `${host}${path}`
-    const params = {
+    const params: JsonRequestParams = {
       method,
       headers,
       agent,
-      attempt: 1
+      attempt: 1,
     }
 
     if (debug) params.start = Date.now()
@@ -32,17 +39,17 @@ export function jsonRequestFactory (config) {
       params.body = JSON.stringify(body)
     }
 
-    return tryRequest(url, params, config)
+    return tryRequest<ResponseBody>(url, params, config)
   }
 }
 
-const tryRequest = async (url, params, config) => {
+const tryRequest = async <ResponseBody>(url, params, config) => {
   const res = await request(url, params)
-  return handleResponse(res, url, params, config)
+  return handleResponse<ResponseBody>(res, url, params, config)
 }
 
-const handleResponse = async (res, url, params, config) => {
-  res.data = await res.json()
+const handleResponse = async <ResponseBody>(res, url, params, config) => {
+  res.data = await res.json() as ResponseBody
   res.statusCode = res.status
 
   if (config.debug) logRequest(url, params, res)
@@ -61,7 +68,7 @@ const handleResponse = async (res, url, params, config) => {
 function requestError (res, url, params) {
   const { status, data: body } = res
   const { error, reason } = body
-  const err = new Error(`${error}: ${reason}`)
+  const err: FormattedError = new Error(`${error}: ${reason}`)
   const { method, attempt } = params
   // Do not include full params object in context
   // as that would params.agent stringification would fail due to circular reference
@@ -70,7 +77,7 @@ function requestError (res, url, params) {
   err.stack += `\nContext: ${JSON.stringify(err.context)}`
   err.statusCode = err.status = status
   err.body = body
-  return /** @type {FormattedError} */ (err)
+  return err
 }
 
 const logRequest = (url, params, res) => {

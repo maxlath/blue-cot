@@ -1,17 +1,10 @@
-/**
- * @typedef { import('../types/types.d.ts').FormattedError } FormattedError
- */
+import type { FormattedError } from 'types/types.js'
 
-/**
-  * @param {string} message
-  * @param {number} [statusCode]
-  * @param {object | string} [context]
-  */
 function formatError (message, statusCode, context) {
-  const err = new Error(message)
+  const err: FormattedError = new Error(message)
   if (statusCode) err.statusCode = statusCode
   if (context) err.context = context
-  return /** @type {FormattedError} */ (err)
+  return err
 }
 
 const buildFromRes = function (res, message) {

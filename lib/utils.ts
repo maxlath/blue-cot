@@ -1,3 +1,5 @@
+import type { IdentifiedDocument } from 'types/nano.js'
+
 export const isPlainObject = obj => {
   return typeof obj === 'object' && !(Array.isArray(obj)) && obj !== null
 }
@@ -28,4 +30,8 @@ export const validateNonNull = (obj, label) => {
   if (obj == null) {
     throw new TypeError(`missing ${label}`)
   }
+}
+
+export function isIdentifiedDocument (doc): doc is IdentifiedDocument {
+  return doc._id != null
 }

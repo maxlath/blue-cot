@@ -65,6 +65,7 @@ Especially compared to [Cot](https://github.com/willconant/cot-node) from which 
 * Adds [a few new functions](#specific-api), notably [some view functions goodies](https://github.com/inventaire/blue-cot/blob/master/lib/view_functions.js)
 * Uses [Cookie Authentication](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#cookie-authentication) instead of [Basic Auth](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#basic-authentication) for better performance
 * Uses a single persistent connexion to CouchDB by default
+* Types
 
 ## Initialization
 

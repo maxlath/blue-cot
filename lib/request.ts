@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'
+
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 export default (url, options) => tryRequest(url, options)
