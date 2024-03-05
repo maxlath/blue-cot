@@ -1,6 +1,12 @@
 # CHANGELOG
 *versions follow [SemVer](http://semver.org)*
 
+## 8.0.0 - 2024-03-05
+**BREAKING CHANGES**:
+  - use ESM import/export
+  - removed `db.batch` method: use `db.post(doc, { batch: 'ok' })` or `db.put(doc, { batch: 'ok' })` instead
+- New feature: add types
+
 ## 7.0.0 - 2022-01-18
 **BREAKING CHANGES**:
 - [view functions](https://github.com/maxlath/blue-cot#view) and [`db.changes`](https://github.com/maxlath/blue-cot#changes) now reject unkwown query parameters
