@@ -1,5 +1,5 @@
 import { mapDoc, firstDoc } from './couch_helpers.js'
-import errors_ from './errors.js'
+import { newError } from './errors.js'
 import { validateString, validatePlainObject, validateArray, validateNonNull } from './utils.js'
 import type { ViewName, ViewKey, DocumentViewWithDocsParams } from '../types/types.js'
 
@@ -43,7 +43,7 @@ export default function (db, designDocName) {
       if (doc) {
         return doc
       } else {
-        throw errors_.new('Not Found', 404, [ viewName, key ])
+        throw newError('Not Found', 404, [ viewName, key ])
       }
     },
 

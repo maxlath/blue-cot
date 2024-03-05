@@ -1,5 +1,5 @@
 import querystring from 'node:querystring'
-import errors_ from './errors.js'
+import { buildErrorFromRes, newError } from './errors.js'
 import { changesQueryKeys, viewQueryKeys } from './query_keys.js'
 import { isPlainObject, validateString, validateArray, validatePlainObject, isIdentifiedDocument } from './utils.js'
 import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertResponse, DocumentLookupFailure, DocumentViewParams, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse } from '../types/nano.js'
@@ -28,14 +28,14 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       if (typeof docRev === 'string') url += `?rev=${docRev}`
       const res = await jsonRequest<DocumentGetResponse>('GET', url)
       if (res.statusCode === 200) return res.data
-      else throw errors_.buildFromRes(res, `error getting doc ${docId}`)
+      else throw buildErrorFromRes(res, `error getting doc ${docId}`)
     },
 
     exists: async (docId: DocId) => {
       try {
         const res = await jsonRequest<DocumentGetResponse>('GET', db.docUrl(docId))
         if (res.statusCode === 200) return true
-        else throw errors_.buildFromRes(res, `error getting doc ${docId}`)
+        else throw buildErrorFromRes(res, `error getting doc ${docId}`)
       } catch (err) {
         if (err.statusCode === 404) return false
         else throw err
@@ -46,7 +46,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       validatePlainObject(doc, 'doc')
       const res = await jsonRequest<DocumentInsertResponse>('PUT', db.docUrl(doc._id), doc)
       if (res.statusCode === 200 || res.statusCode === 201) return res.data
-      else throw errors_.buildFromRes(res, `error putting doc ${doc._id}`)
+      else throw buildErrorFromRes(res, `error putting doc ${doc._id}`)
     },
 
     post: async (doc: NewDoc) => {
@@ -55,9 +55,9 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       if (res.statusCode === 201) {
         return res.data
       } else if (isIdentifiedDocument(doc)) {
-        throw errors_.buildFromRes(res, `error posting doc ${doc._id}`)
+        throw buildErrorFromRes(res, `error posting doc ${doc._id}`)
       } else {
-        throw errors_.buildFromRes(res, 'error posting new doc')
+        throw buildErrorFromRes(res, 'error posting new doc')
       }
     },
 
@@ -68,9 +68,9 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       if (res.statusCode === 202) {
         return res.data
       } else if (isIdentifiedDocument(doc)) {
-        throw errors_.buildFromRes(res, `error batch posting doc ${doc._id}`)
+        throw buildErrorFromRes(res, `error batch posting doc ${doc._id}`)
       } else {
-        throw errors_.buildFromRes(res, 'error batch posting new doc')
+        throw buildErrorFromRes(res, 'error batch posting new doc')
       }
     },
 
@@ -78,7 +78,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       let attempt = 0
       const { createIfMissing } = options
       const tryIt = async () => {
-        if (++attempt > 10) throw errors_.new('too many attempts', 400, { docId, fn })
+        if (++attempt > 10) throw newError('too many attempts', 400, { docId, fn })
         let doc
         try {
           doc = await db.get(docId)
@@ -103,7 +103,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       const url = db.docUrl(docId) + '?rev=' + encodeURIComponent(rev)
       const res = await jsonRequest<DocumentDestroyResponse>('DELETE', url)
       if (res.statusCode === 200) return res.data
-      else throw errors_.buildFromRes(res, `error deleting doc ${docId}`)
+      else throw buildErrorFromRes(res, `error deleting doc ${docId}`)
     },
 
     // Based on http://stackoverflow.com/a/16827094/3324977
@@ -112,7 +112,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       try {
         // Verify that it's indeed a deleted document: if get doesn't throw, there is nothing to undelete
         await db.get(docId)
-        throw errors_.new("can't undelete an non-deleted document", 400, docId)
+        throw newError("can't undelete an non-deleted document", 400, docId)
       } catch (err) {
         if (err.statusCode !== 404 || err.body.reason !== 'deleted') throw err
 
@@ -137,17 +137,17 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       for (let i = 0; i < docs.length; i++) {
         const doc = docs[i]
         if (!isPlainObject(doc)) {
-          throw errors_.new('invalid bulk doc', 400, { doc, index: i })
+          throw newError('invalid bulk doc', 400, { doc, index: i })
         }
       }
 
       const res = await jsonRequest<DocumentBulkResponse[]>('POST', url, { docs })
-      if (res.statusCode !== 201) throw errors_.buildFromRes(res, 'error posting to _bulk_docs')
+      if (res.statusCode !== 201) throw buildErrorFromRes(res, 'error posting to _bulk_docs')
 
       for (const part of res.data) {
         if (part.error != null) {
           const statusCode = part.error === 'conflict' ? 409 : 400
-          throw errors_.new('bulk response contains errors', statusCode, { body: res.data })
+          throw newError('bulk response contains errors', statusCode, { body: res.data })
         }
       }
       return res.data
@@ -160,7 +160,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       const url = `/${dbName}/${path}?${qs}`
       const res = await jsonRequest<DocumentViewResponse<V, D>>('GET', url)
       if (res.statusCode === 200) return res.data
-      else throw errors_.buildFromRes(res, `error reading view ${path}`)
+      else throw buildErrorFromRes(res, `error reading view ${path}`)
     },
 
     view: async (designName: string, viewName: string, query: DocumentViewParams) => {
@@ -181,7 +181,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       const url = `/${dbName}/${path}?${qs}`
       const res = await jsonRequest<DocumentViewResponse<V, D>>('POST', url, { keys })
       if (res.statusCode === 200) return res.data
-      else throw errors_.buildFromRes(res, `error reading view ${path}`)
+      else throw buildErrorFromRes(res, `error reading view ${path}`)
     },
 
     viewKeys: async (designName: string, viewName: string, keys: ViewKey[], query?: DocumentViewParams) => {
@@ -210,7 +210,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
         else if (row.value.deleted) errors.push({ key: row.key, error: 'deleted' })
         else docs.push(row.doc as D)
       }
-      if (throwOnErrors && errors.length > 0) throw errors_.new('docs fetch errors', 400, { keys, errors })
+      if (throwOnErrors && errors.length > 0) throw newError('docs fetch errors', 400, { keys, errors })
       return { docs, errors }
     },
 
@@ -241,7 +241,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
 
       const res = await jsonRequest<DatabaseChangesResponse>('GET', path)
       if (res.statusCode === 200) return res.data
-      else throw errors_.buildFromRes(res, 'error reading _changes')
+      else throw buildErrorFromRes(res, 'error reading _changes')
     },
 
     find: async <D>(query: FindQuery = {}, options: FindOptions = {}) => {
@@ -252,12 +252,12 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       if (res.statusCode === 200) {
         const { warning } = res.data
         if (query.use_index != null && warning != null && warning.includes('No matching index found')) {
-          throw errors_.new('No matching index found', 400, { path, query, options, warning })
+          throw newError('No matching index found', 400, { path, query, options, warning })
         } else {
           return res.data
         }
       } else {
-        throw errors_.buildFromRes(res, 'find error')
+        throw buildErrorFromRes(res, 'find error')
       }
     },
 
@@ -265,18 +265,18 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       validatePlainObject(indexDoc, 'index doc')
       const res = await jsonRequest<CreateIndexResponse>('POST', `/${dbName}/_index`, indexDoc)
       if (res.statusCode === 200 || res.statusCode === 201) return res.data
-      else throw errors_.buildFromRes(res, 'postIndex error')
+      else throw buildErrorFromRes(res, 'postIndex error')
     },
 
     recover: async (docId: DocId, candidatesRevsInfo: RevInfo[], currentRevInfo: RevInfo, testFn?: TestFunction) => {
       const previousRevInfo = candidatesRevsInfo.shift()
 
       if (previousRevInfo == null) {
-        throw errors_.new('no previous version could be found', 400, { docId, candidatesRevsInfo, currentRevInfo })
+        throw newError('no previous version could be found', 400, { docId, candidatesRevsInfo, currentRevInfo })
       }
 
       if (previousRevInfo.status !== 'available') {
-        throw errors_.new('previous version isnt available', 400, { docId, candidatesRevsInfo, currentRevInfo })
+        throw newError('previous version isnt available', 400, { docId, candidatesRevsInfo, currentRevInfo })
       }
 
       const targetVersion = await db.get(docId, previousRevInfo.rev)
@@ -315,7 +315,7 @@ const buildSanitizedQueryString = (query = {}, queryKeys) => {
 
 const validateQueryKey = (queryKeys, key, query) => {
   if (queryKeys[key] == null) {
-    throw errors_.new('invalid query key', 400, { key, query, validKeys: Object.keys(queryKeys) })
+    throw newError('invalid query key', 400, { key, query, validKeys: Object.keys(queryKeys) })
   }
 }
 

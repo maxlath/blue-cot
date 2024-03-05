@@ -1,13 +1,13 @@
 import type { FormattedError } from 'types/types.js'
 
-function formatError (message, statusCode, context) {
+export function newError (message, statusCode, context) {
   const err: FormattedError = new Error(message)
   if (statusCode) err.statusCode = statusCode
   if (context) err.context = context
   return err
 }
 
-const buildFromRes = function (res, message) {
+export function buildErrorFromRes (res, message) {
   const { statusCode, body } = res
   message += `: ${statusCode}`
 
@@ -21,7 +21,5 @@ const buildFromRes = function (res, message) {
 
   if (bodyStr) message += ` - ${bodyStr}`
 
-  return formatError(message, statusCode, body)
+  return newError(message, statusCode, body)
 }
-
-export default { new: formatError, buildFromRes }
