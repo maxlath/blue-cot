@@ -2,7 +2,7 @@ import querystring from 'node:querystring'
 import { buildErrorFromRes, newError } from './errors.js'
 import { changesQueryKeys, viewQueryKeys } from './query_keys.js'
 import { isPlainObject, validateString, validateArray, validatePlainObject, isIdentifiedDocument } from './utils.js'
-import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertResponse, DocumentLookupFailure, DocumentViewParams, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse } from '../types/nano.js'
+import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertParams, DocumentInsertResponse, DocumentLookupFailure, DocumentViewParams, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse } from '../types/nano.js'
 import type { DocId, DocRev, DocTranformer, FetchOptions, FindOptions, FindQuery, JsonRequest, NewDoc, TestFunction, RecoveredDoc, UpdateOptions, ViewKey, DocumentDeletedFailure, RevInfo, DocumentRevertResponse } from 'types/types.js'
 
 export default function (jsonRequest: JsonRequest, dbName: string) {
@@ -42,35 +42,24 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       }
     },
 
-    put: async (doc: IdentifiedDocument | RecoveredDoc) => {
+    put: async (doc: IdentifiedDocument | RecoveredDoc, params?: DocumentInsertParams) => {
       validatePlainObject(doc, 'doc')
-      const res = await jsonRequest<DocumentInsertResponse>('PUT', db.docUrl(doc._id), doc)
-      if (res.statusCode === 200 || res.statusCode === 201) return res.data
+      const url = buildUrl(db.docUrl(doc._id), params)
+      const res = await jsonRequest<DocumentInsertResponse>('PUT', url, doc)
+      if (res.statusCode === 200 || res.statusCode === 201 || (params.batch && res.statusCode === 202)) return res.data
       else throw buildErrorFromRes(res, `error putting doc ${doc._id}`)
     },
 
-    post: async (doc: NewDoc) => {
+    post: async (doc: NewDoc, params?: DocumentInsertParams) => {
       validatePlainObject(doc, 'doc')
-      const res = await jsonRequest<DocumentInsertResponse>('POST', `/${dbName}`, doc)
-      if (res.statusCode === 201) {
+      const url = buildUrl(`/${dbName}`, params)
+      const res = await jsonRequest<DocumentInsertResponse>('POST', url, doc)
+      if (res.statusCode === 201 || (params.batch && res.statusCode === 202)) {
         return res.data
       } else if (isIdentifiedDocument(doc)) {
         throw buildErrorFromRes(res, `error posting doc ${doc._id}`)
       } else {
         throw buildErrorFromRes(res, 'error posting new doc')
-      }
-    },
-
-    batch: async (doc: Document) => {
-      validatePlainObject(doc, 'doc')
-      const path = `/${dbName}?batch=ok`
-      const res = await jsonRequest<DocumentInsertResponse>('POST', path, doc)
-      if (res.statusCode === 202) {
-        return res.data
-      } else if (isIdentifiedDocument(doc)) {
-        throw buildErrorFromRes(res, `error batch posting doc ${doc._id}`)
-      } else {
-        throw buildErrorFromRes(res, 'error batch posting new doc')
       }
     },
 
@@ -153,7 +142,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       return res.data
     },
 
-    buildQueryString: (query?: DocumentViewParams) => buildSanitizedQueryString(query, viewQueryKeys),
+    buildQueryString: (query?: DocumentViewParams) => buildSanitizedViewQueryString(query, viewQueryKeys),
 
     viewQuery: async <V, D>(path: string, query?: DocumentViewParams) => {
       const qs = db.buildQueryString(query)
@@ -236,7 +225,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
     },
 
     changes: async (query: DatabaseChangesParams = {}) => {
-      const qs = buildSanitizedQueryString(query, changesQueryKeys)
+      const qs = buildSanitizedViewQueryString(query, changesQueryKeys)
       const path = `/${dbName}/_changes?${qs}`
 
       const res = await jsonRequest<DatabaseChangesResponse>('GET', path)
@@ -294,7 +283,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
   return db
 }
 
-const buildSanitizedQueryString = (query = {}, queryKeys) => {
+const buildSanitizedViewQueryString = (query = {}, queryKeys) => {
   validatePlainObject(query, 'query')
   const q = {}
   for (const key of Object.keys(query)) {
@@ -321,4 +310,12 @@ const validateQueryKey = (queryKeys, key, query) => {
 
 function isDocumentLookupFailure (row): row is DocumentLookupFailure {
   return row.error != null
+}
+
+function buildUrl (path, params) {
+  if (params) {
+    return `${path}?${querystring.stringify(params)}`
+  } else {
+    return path
+  }
 }

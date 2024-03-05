@@ -29,7 +29,6 @@ const dbHanlderFunctions = [
   'exists',
   'put',
   'post',
-  'batch',
   'update',
   'delete',
   'undelete',

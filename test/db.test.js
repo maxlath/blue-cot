@@ -191,7 +191,7 @@ describe('DbHandle', () => {
     it('should ignore conflicts', async () => {
       const doc = { _id: 'batch-test' }
       const res = await db.post(doc)
-      await db.batch(doc)
+      await db.post(doc, { batch: 'ok' })
       await wait(10)
       const res3 = await db.get(doc._id)
       res3._rev.should.equal(res.rev)

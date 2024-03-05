@@ -22,7 +22,6 @@ Forked from [Cot](https://github.com/willconant/cot-node), and renamed `blue-cot
     - [find](#find)
     - [postIndex](#postindex)
     - [exists](#exists)
-    - [batch](#batch)
     - [update](#update)
     - [bulk](#bulk)
     - [allDocs](#alldocs)
@@ -234,21 +233,6 @@ const res = await db.exists(docId)
 ```
 
 Returns a promise resolving to true if it exist, or a rejected promise if it doesn't.
-
-#### batch
-`POST /<dbName>?batch=ok`
-```js
-const res = await db.batch(doc)
-```
-doc: [`Batch Mode`](http://guide.couchdb.org/draft/performance.html#batch)
-
-Creates or updates a document but doesn't wait for success. Conflicts will not be detected.
-
-On 202, returns result from CouchDB which looks like: `{"ok":true, "id":"<docId>"}`
-
-The rev isn't returned because CouchDB returns before checking for conflicts. If there is a conflict, the update will be silently lost.
-
-All other status codes are treated as errors, and thus return a rejected promise.
 
 #### update
 ```js
