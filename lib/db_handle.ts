@@ -152,15 +152,15 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       else throw buildErrorFromRes(res, `error reading view ${path}`)
     },
 
-    view: async (designName: string, viewName: string, query: DocumentViewParams) => {
+    view: async <V, D>(designName: string, viewName: string, query: DocumentViewParams) => {
       validateString(designName, 'design doc name')
       validateString(viewName, 'view name')
       validatePlainObject(query, 'query')
-      return db.viewQuery(`_design/${designName}/_view/${viewName}`, query)
+      return db.viewQuery<V, D>(`_design/${designName}/_view/${viewName}`, query)
     },
 
-    allDocs: async (query?: DocumentViewParams) => {
-      return db.viewQuery('_all_docs', query)
+    allDocs: async <V, D>(query?: DocumentViewParams) => {
+      return db.viewQuery<V, D>('_all_docs', query)
     },
 
     viewKeysQuery: async <V, D>(path: string, keys: ViewKey[], query: DocumentViewParams = {}) => {
@@ -173,13 +173,13 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       else throw buildErrorFromRes(res, `error reading view ${path}`)
     },
 
-    viewKeys: async (designName: string, viewName: string, keys: ViewKey[], query?: DocumentViewParams) => {
+    viewKeys: async <V, D>(designName: string, viewName: string, keys: ViewKey[], query?: DocumentViewParams) => {
       validateString(designName, 'design doc name')
       validateString(viewName, 'view name')
       validateArray(keys, 'keys')
       validatePlainObject(query, 'query')
       const path = `_design/${designName}/_view/${viewName}`
-      return db.viewKeysQuery(path, keys, query)
+      return db.viewKeysQuery<V, D>(path, keys, query)
     },
 
     // http://docs.couchdb.org/en/latest/db/database/bulk-db.html#post--db-_all_docs

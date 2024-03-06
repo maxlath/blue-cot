@@ -39,7 +39,7 @@ export default function (db, designDocName) {
         include_docs: true,
         limit: 1,
       })
-      const doc = firstDoc(res)
+      const doc = firstDoc<D>(res)
       if (doc) {
         return doc
       } else {
