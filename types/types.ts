@@ -34,7 +34,7 @@ export interface FindOptions {
 
 export type MixedKeyElement = string | number | object
 
-export type ViewKey = string | MixedKeyElement[] | { [key: string]: MixedKeyElement }
+export type ViewKey = string | number | MixedKeyElement[] | { [key: string]: MixedKeyElement }
 
 export interface FetchOptions {
   throwOnErrors?: boolean
