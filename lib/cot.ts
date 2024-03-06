@@ -8,20 +8,13 @@ export default function (opts: ConfigParams) {
   const jsonRequest = jsonRequestFactory(configParser(opts))
   return (dbName: DbName, designDocName?: DesignDocName) => {
     const rawDbHandler = dbHandle(jsonRequest, dbName)
-    if (typeof designDocName === 'string') {
-      return {
-        name: dbName,
-        request: jsonRequest,
-        designDocName,
-        ...rawDbHandler,
-        ...viewFunctions(rawDbHandler, designDocName),
-      }
-    } else {
-      return {
-        name: dbName,
-        request: jsonRequest,
-        ...rawDbHandler,
-      }
+    designDocName = designDocName || dbName
+    return {
+      name: dbName,
+      request: jsonRequest,
+      designDocName,
+      ...rawDbHandler,
+      ...viewFunctions(rawDbHandler, designDocName),
     }
   }
 }

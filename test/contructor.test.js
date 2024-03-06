@@ -7,15 +7,18 @@ describe('cot', () => {
     dbHandler.should.be.a.Function()
     const db = dbHandler('bar')
     db.name.should.equal('bar')
-    Object.keys(db).sort().should.deepEqual(dbKeys.sort())
-    dbHanlderFunctions.forEach(fnName => {
+    db.designDocName.should.equal('bar')
+    Object.keys(db).sort().should.deepEqual(dbKeysWithViewFunctions.sort())
+    dbHanlderFunctionsWithViewFunctions.forEach(fnName => {
       db[fnName].should.be.a.Function()
     })
   })
 
-  it('should return an db handler extended with view functions when passed a db name and a design doc name', () => {
+  it('should return a db handler with a customized design doc name', () => {
     const db = cot({ protocol: 'http', hostname: 'foo', port: 80, username: 'foo', password: 'fi' })('bar', 'buzz')
-    Object.keys(db).length.should.equal(dbKeysWithViewFunctions.length)
+    db.name.should.equal('bar')
+    db.designDocName.should.equal('buzz')
+    Object.keys(db).sort().should.deepEqual(dbKeysWithViewFunctions.sort())
     dbHanlderFunctionsWithViewFunctions.forEach(fnName => {
       db[fnName].should.be.a.Function()
     })
@@ -61,5 +64,4 @@ const viewFunctions = [
 
 const dbHanlderFunctionsWithViewFunctions = dbHanlderFunctions.concat(viewFunctions)
 
-const dbKeys = [ 'name' ].concat(dbHanlderFunctions)
-const dbKeysWithViewFunctions = [ 'name', 'designDoc' ].concat(dbHanlderFunctions, viewFunctions)
+const dbKeysWithViewFunctions = [ 'name', 'designDocName' ].concat(dbHanlderFunctions, viewFunctions)
