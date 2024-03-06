@@ -23,10 +23,10 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       return res.data
     },
 
-    get: async (docId: DocId, docRev?: DocRev) => {
+    get: async <D> (docId: DocId, docRev?: DocRev) => {
       let url = db.docUrl(docId)
       if (typeof docRev === 'string') url += `?rev=${docRev}`
-      const res = await jsonRequest<DocumentGetResponse>('GET', url)
+      const res = await jsonRequest<DocumentGetResponse & D>('GET', url)
       if (res.statusCode === 200) return res.data
       else throw buildErrorFromRes(res, `error getting doc ${docId}`)
     },
