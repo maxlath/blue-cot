@@ -2,7 +2,7 @@ import querystring from 'node:querystring'
 import { buildErrorFromRes, newError } from './errors.js'
 import { changesQueryKeys, viewQueryKeys } from './query_keys.js'
 import { isPlainObject, validateString, validateArray, validatePlainObject, isIdentifiedDocument } from './utils.js'
-import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertParams, DocumentInsertResponse, DocumentLookupFailure, DocumentViewParams, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse } from '../types/nano.js'
+import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, Document, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertParams, DocumentInsertResponse, DocumentLookupFailure, DocumentViewParams, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse } from '../types/nano.js'
 import type { DocId, DocRev, DocTranformer, FetchOptions, FindOptions, FindQuery, JsonRequest, NewDoc, TestFunction, RecoveredDoc, UpdateOptions, ViewKey, DocumentDeletedFailure, RevInfo, DocumentRevertResponse } from 'types/types.js'
 
 export default function (jsonRequest: JsonRequest, dbName: string) {
