@@ -55,11 +55,11 @@ const dbHanlderFunctions = [
 ]
 
 const viewFunctions = [
-  'viewCustom',
-  'viewByKeysCustom',
-  'viewByKey',
-  'viewFindOneByKey',
-  'viewByKeys',
+  'getDocsByViewQuery',
+  'getDocsByViewKeysAndCustomQuery',
+  'getDocsByViewKey',
+  'findDocByViewKey',
+  'getDocsByViewKeys',
 ]
 
 const dbHanlderFunctionsWithViewFunctions = dbHanlderFunctions.concat(viewFunctions)

@@ -6,9 +6,9 @@ import { shouldNotBeCalled, catch404 } from './utils.js'
 describe('Validations', () => {
   const db = cot(config.cot)(config.dbName, 'test')
 
-  describe('#viewCustom', () => {
+  describe('#getDocsByViewQuery', () => {
     it('should reject a call without a view name', async () => {
-      await db.viewCustom()
+      await db.getDocsByViewQuery()
       .then(shouldNotBeCalled)
       .catch(err => {
         err.message.should.equal('invalid view name')
@@ -16,7 +16,7 @@ describe('Validations', () => {
     })
 
     it('should reject a call without query object', async () => {
-      await db.viewCustom('byKey')
+      await db.getDocsByViewQuery('byKey')
       .then(shouldNotBeCalled)
       .catch(err => {
         err.message.should.startWith('invalid query object')
@@ -24,9 +24,9 @@ describe('Validations', () => {
     })
   })
 
-  describe('#viewByKeysCustom', () => {
+  describe('#getDocsByViewKeysAndCustomQuery', () => {
     it('should reject a call without a view name', async () => {
-      await db.viewByKeysCustom()
+      await db.getDocsByViewKeysAndCustomQuery()
       .then(shouldNotBeCalled)
       .catch(err => {
         err.message.should.equal('invalid view name')
@@ -34,7 +34,7 @@ describe('Validations', () => {
     })
 
     it('should reject a call without a keys array', async () => {
-      await db.viewByKeysCustom('byKey')
+      await db.getDocsByViewKeysAndCustomQuery('byKey')
       .then(shouldNotBeCalled)
       .catch(err => {
         err.message.should.startWith('invalid keys array')
@@ -42,7 +42,7 @@ describe('Validations', () => {
     })
 
     it('should reject a call without query object', async () => {
-      await db.viewByKeysCustom('byKey', [ 'foo' ])
+      await db.getDocsByViewKeysAndCustomQuery('byKey', [ 'foo' ])
       .then(shouldNotBeCalled)
       .catch(err => {
         err.message.should.startWith('invalid query object')
@@ -50,9 +50,9 @@ describe('Validations', () => {
     })
   })
 
-  describe('#viewByKey', () => {
+  describe('#getDocsByViewKey', () => {
     it('should reject a call without a view name', async () => {
-      await db.viewByKey()
+      await db.getDocsByViewKey()
       .then(shouldNotBeCalled)
       .catch(err => {
         err.message.should.equal('invalid view name')
@@ -60,7 +60,7 @@ describe('Validations', () => {
     })
 
     it('should reject a call without a key', async () => {
-      await db.viewByKey('byKey')
+      await db.getDocsByViewKey('byKey')
       .then(shouldNotBeCalled)
       .catch(err => {
         err.message.should.equal('missing key')
@@ -68,9 +68,9 @@ describe('Validations', () => {
     })
   })
 
-  describe('#viewFindOneByKey', () => {
+  describe('#findDocByViewKey', () => {
     it('should reject a call without a view name', async () => {
-      await db.viewFindOneByKey()
+      await db.findDocByViewKey()
       .then(shouldNotBeCalled)
       .catch(err => {
         err.message.should.equal('invalid view name')
@@ -78,7 +78,7 @@ describe('Validations', () => {
     })
 
     it('should reject a call without a key', async () => {
-      await db.viewFindOneByKey('byKey')
+      await db.findDocByViewKey('byKey')
       .then(shouldNotBeCalled)
       .catch(err => {
         err.message.should.equal('missing key')
@@ -86,9 +86,9 @@ describe('Validations', () => {
     })
   })
 
-  describe('#viewByKeys', () => {
+  describe('#getDocsByViewKeys', () => {
     it('should reject a call without a view name', async () => {
-      await db.viewByKeys()
+      await db.getDocsByViewKeys()
       .then(shouldNotBeCalled)
       .catch(err => {
         err.message.should.equal('invalid view name')
@@ -96,7 +96,7 @@ describe('Validations', () => {
     })
 
     it('should reject a call without keys array', async () => {
-      await db.viewByKeys('byKey')
+      await db.getDocsByViewKeys('byKey')
       .then(shouldNotBeCalled)
       .catch(err => {
         err.message.should.startWith('invalid keys array')
@@ -164,14 +164,14 @@ describe('Views', () => {
     })
   })
 
-  describe('#viewFindOneByKey', () => {
+  describe('#findDocByViewKey', () => {
     it('should return a unique doc', async () => {
-      const doc = await db.viewFindOneByKey('byKey', 'key-1')
+      const doc = await db.findDocByViewKey('byKey', 'key-1')
       doc._id.should.equal('doc-1')
     })
 
     it('should return a formatted error', async () => {
-      await db.viewFindOneByKey('testView', 'notexisting')
+      await db.findDocByViewKey('testView', 'notexisting')
       .then(shouldNotBeCalled)
       .catch(err => {
         should(err.statusCode).be.ok()

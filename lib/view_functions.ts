@@ -5,7 +5,7 @@ import type { ViewName, ViewKey, DocumentViewWithDocsParams } from '../types/typ
 
 export default function (db, designDocName) {
   const viewFunctions = {
-    async viewCustom <D> (viewName: ViewName, query: DocumentViewWithDocsParams) {
+    async getDocsByViewQuery <D> (viewName: ViewName, query: DocumentViewWithDocsParams) {
       validateString(viewName, 'view name')
       validatePlainObject(query, 'query')
       const res = await db.view(designDocName, viewName, query)
@@ -14,7 +14,7 @@ export default function (db, designDocName) {
       return mapDoc<D>(res)
     },
 
-    async viewByKeysCustom <D> (viewName: ViewName, keys: ViewKey[], query: DocumentViewWithDocsParams) {
+    async getDocsByViewKeysAndCustomQuery <D> (viewName: ViewName, keys: ViewKey[], query: DocumentViewWithDocsParams) {
       validateString(viewName, 'view name')
       validateArray(keys, 'keys')
       validatePlainObject(query, 'query')
@@ -22,19 +22,19 @@ export default function (db, designDocName) {
       return mapDoc<D>(res)
     },
 
-    async viewByKey <D> (viewName: ViewName, key: ViewKey) {
+    async getDocsByViewKey <D> (viewName: ViewName, key: ViewKey) {
       validateString(viewName, 'view name')
       validateNonNull(key, 'key')
-      return viewFunctions.viewCustom<D>(viewName, {
+      return viewFunctions.getDocsByViewQuery<D>(viewName, {
         key,
         include_docs: true,
       })
     },
 
-    async viewFindOneByKey <D> (viewName: ViewName, key: ViewKey) {
+    async findDocByViewKey <D> (viewName: ViewName, key: ViewKey) {
       validateString(viewName, 'view name')
       validateNonNull(key, 'key')
-      const res = await viewFunctions.viewCustom<D>(viewName, {
+      const res = await viewFunctions.getDocsByViewQuery<D>(viewName, {
         key,
         include_docs: true,
         limit: 1,
@@ -47,10 +47,10 @@ export default function (db, designDocName) {
       }
     },
 
-    async viewByKeys <D> (viewName: ViewName, keys: ViewKey[]) {
+    async getDocsByViewKeys <D> (viewName: ViewName, keys: ViewKey[]) {
       validateString(viewName, 'view name')
       validateArray(keys, 'keys')
-      return viewFunctions.viewByKeysCustom<D>(viewName, keys, { include_docs: true })
+      return viewFunctions.getDocsByViewKeysAndCustomQuery<D>(viewName, keys, { include_docs: true })
     },
   }
 

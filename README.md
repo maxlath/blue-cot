@@ -38,11 +38,11 @@ Forked from [Cot](https://github.com/willconant/cot-node), and renamed `blue-cot
     - [viewKeysQuery](#viewkeysquery)
     - [viewKeys](#viewkeys)
     - [Design doc specific view functions](#design-doc-specific-view-functions)
-      - [viewCustom](#viewcustom)
-      - [viewByKeysCustom](#viewbykeyscustom)
-      - [viewByKey](#viewbykey)
-      - [viewFindOneByKey](#viewfindonebykey)
-      - [viewByKeys](#viewbykeys)
+      - [getDocsByViewQuery](#viewcustom)
+      - [getDocsByViewKeysAndCustomQuery](#viewbykeyscustom)
+      - [getDocsByViewKey](#viewbykey)
+      - [findDocByViewKey](#viewfindonebykey)
+      - [getDocsByViewKeys](#viewbykeys)
   - [Utils](#utils)
     - [buildQueryString](#buildquerystring)
 - [See also](#see-also)
@@ -364,11 +364,11 @@ To access those, pass a design doc name as second argument
 const db = getDbApi('some-db-name', 'some-design-doc-name')
 ```
 
-##### viewCustom
-##### viewByKeysCustom
-##### viewByKey
-##### viewFindOneByKey
-##### viewByKeys
+##### getDocsByViewQuery
+##### getDocsByViewKeysAndCustomQuery
+##### getDocsByViewKey
+##### findDocByViewKey
+##### getDocsByViewKeys
 
 see [lib/view_functions](https://github.com/maxlath/blue-cot/blob/master/lib/view_functions.js)
 
