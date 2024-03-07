@@ -1,6 +1,14 @@
 # CHANGELOG
 *versions follow [SemVer](http://semver.org)*
 
+## 9.0.0 - 2024-03-07
+**BREAKING CHANGES**:
+- rename `viewByKey` => `getDocsByViewKey`
+- rename `viewByKeys` => `getDocsByViewKeys`
+- rename `viewFindOneByKey` => `findDocByViewKey`
+- rename `viewCustom` => `getDocsByViewQuery`
+- rename `viewByKeysCustom` => `getDocsByViewKeysAndCustomQuery`
+
 ## 8.0.0 - 2024-03-05
 **BREAKING CHANGES**:
   - use ESM import/export
