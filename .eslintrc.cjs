@@ -23,6 +23,7 @@ module.exports = {
   },
   plugins: [
     'node-import',
+    '@stylistic/ts',
   ],
   rules: {
     'array-bracket-spacing': [ 'error', 'always' ],
@@ -58,6 +59,8 @@ module.exports = {
     'one-var': [ 'off' ],
     'prefer-arrow-callback': [ 'error' ],
     'prefer-const': [ 'error' ],
+    '@stylistic/ts/type-annotation-spacing': 'error',
+    '@stylistic/ts/space-infix-ops': 'error',
     '@typescript-eslint/ban-ts-comment': 'off',
     '@typescript-eslint/consistent-type-imports': [ 'error', { prefer: 'type-imports' } ],
     '@typescript-eslint/no-explicit-any': 'off',
