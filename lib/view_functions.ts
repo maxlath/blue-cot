@@ -9,7 +9,7 @@ export default function (db: ReturnType<typeof dbHandle>, designDocName: DesignD
     async getDocsByViewQuery <D> (viewName: ViewName, query: DocumentViewWithDocsParams) {
       validateString(viewName, 'view name')
       validatePlainObject(query, 'query')
-      const res = await db.view<unknown, D>(designDocName, viewName, query)
+      const res = await db.view<unknown, unknown, D, string>(designDocName, viewName, query)
       // Assumes the view uses include_docs: true
       // to do without it, just use db.view)
       return mapDoc<D>(res)
@@ -19,7 +19,7 @@ export default function (db: ReturnType<typeof dbHandle>, designDocName: DesignD
       validateString(viewName, 'view name')
       validateArray(keys, 'keys')
       validatePlainObject(query, 'query')
-      const res = await db.viewKeys(designDocName, viewName, keys, query)
+      const res = await db.viewKeys<ViewKey, unknown, D, string>(designDocName, viewName, keys, query)
       return mapDoc<D>(res)
     },
 

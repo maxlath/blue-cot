@@ -144,42 +144,42 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
 
     buildQueryString: (query?: DocumentViewParams) => buildSanitizedViewQueryString(query, viewQueryKeys),
 
-    viewQuery: async <V, D>(path: string, query?: DocumentViewParams) => {
+    viewQuery: async <K, V, D, ID>(path: string, query?: DocumentViewParams) => {
       const qs = db.buildQueryString(query)
       const url = `/${dbName}/${path}?${qs}`
-      const res = await jsonRequest<DocumentViewResponse<V, D>>('GET', url)
+      const res = await jsonRequest<DocumentViewResponse<K, V, D, ID>>('GET', url)
       if (res.statusCode === 200) return res.data
       else throw buildErrorFromRes(res, `error reading view ${path}`)
     },
 
-    view: async <V, D>(designName: string, viewName: string, query: DocumentViewParams) => {
+    view: async <K, V, D, ID>(designName: string, viewName: string, query: DocumentViewParams) => {
       validateString(designName, 'design doc name')
       validateString(viewName, 'view name')
       validatePlainObject(query, 'query')
-      return db.viewQuery<V, D>(`_design/${designName}/_view/${viewName}`, query)
+      return db.viewQuery<K, V, D, ID>(`_design/${designName}/_view/${viewName}`, query)
     },
 
-    allDocs: async <V, D>(query?: DocumentViewParams) => {
-      return db.viewQuery<V, D>('_all_docs', query)
+    allDocs: async <K, V, D, ID>(query?: DocumentViewParams) => {
+      return db.viewQuery<K, V, D, ID>('_all_docs', query)
     },
 
-    viewKeysQuery: async <V, D>(path: string, keys: ViewKey[], query: DocumentViewParams = {}) => {
+    viewKeysQuery: async <K, V, D, ID>(path: string, keys: ViewKey[], query: DocumentViewParams = {}) => {
       validateString(path, 'path')
       validateArray(keys, 'keys')
       const qs = db.buildQueryString(query)
       const url = `/${dbName}/${path}?${qs}`
-      const res = await jsonRequest<DocumentViewResponse<V, D>>('POST', url, { keys })
+      const res = await jsonRequest<DocumentViewResponse<K, V, D, ID>>('POST', url, { keys })
       if (res.statusCode === 200) return res.data
       else throw buildErrorFromRes(res, `error reading view ${path}`)
     },
 
-    viewKeys: async <V, D>(designName: string, viewName: string, keys: ViewKey[], query?: DocumentViewParams) => {
+    viewKeys: async <K, V, D, ID>(designName: string, viewName: string, keys: ViewKey[], query?: DocumentViewParams) => {
       validateString(designName, 'design doc name')
       validateString(viewName, 'view name')
       validateArray(keys, 'keys')
       validatePlainObject(query, 'query')
       const path = `_design/${designName}/_view/${viewName}`
-      return db.viewKeysQuery<V, D>(path, keys, query)
+      return db.viewKeysQuery<K, V, D, ID>(path, keys, query)
     },
 
     // http://docs.couchdb.org/en/latest/db/database/bulk-db.html#post--db-_all_docs

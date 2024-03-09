@@ -1513,7 +1513,7 @@ export interface DocumentViewParams {
 
 /** View response.
  * @see Docs: {@link http://docs.couchdb.org/en/latest/api/ddoc/views.html#get--db-_design-ddoc-_view-view} */
-export interface DocumentViewResponse<V, D> {
+export interface DocumentViewResponse<K, V, D, ID = string> {
   /** Offset where the document list started. */
   offset: number
 
@@ -1521,8 +1521,8 @@ export interface DocumentViewResponse<V, D> {
    *
    * By default the information returned contains only the document ID and revision. */
   rows: Array<{
-    id: string
-    key: string
+    id: ID
+    key: K
     value: V
     doc?: D & Document
   }>
