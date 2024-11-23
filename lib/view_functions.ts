@@ -2,11 +2,11 @@ import { mapDoc, firstDoc } from './couch_helpers.js'
 import { newError } from './errors.js'
 import { validateString, validatePlainObject, validateArray, validateNonNull } from './utils.js'
 import type dbHandle from './db_handle.js'
-import type { ViewName, ViewKey, DocumentViewWithDocsParams, DesignDocName } from '../types/types.js'
+import type { ViewName, ViewKey, DocumentViewWithDocsQuery, DesignDocName } from '../types/types.js'
 
 export default function (db: ReturnType<typeof dbHandle>, designDocName: DesignDocName) {
   const viewFunctions = {
-    async getDocsByViewQuery <D> (viewName: ViewName, query: DocumentViewWithDocsParams) {
+    async getDocsByViewQuery <D> (viewName: ViewName, query: DocumentViewWithDocsQuery) {
       validateString(viewName, 'view name')
       validatePlainObject(query, 'query')
       const res = await db.view<unknown, unknown, D, string>(designDocName, viewName, query)
@@ -15,7 +15,7 @@ export default function (db: ReturnType<typeof dbHandle>, designDocName: DesignD
       return mapDoc<D>(res)
     },
 
-    async getDocsByViewKeysAndCustomQuery <D> (viewName: ViewName, keys: ViewKey[], query: DocumentViewWithDocsParams) {
+    async getDocsByViewKeysAndCustomQuery <D> (viewName: ViewName, keys: ViewKey[], query: DocumentViewWithDocsQuery) {
       validateString(viewName, 'view name')
       validateArray(keys, 'keys')
       validatePlainObject(query, 'query')

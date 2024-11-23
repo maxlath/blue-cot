@@ -2,8 +2,8 @@ import querystring from 'node:querystring'
 import { buildErrorFromRes, newError } from './errors.js'
 import { changesQueryKeys, viewQueryKeys } from './query_keys.js'
 import { isPlainObject, validateString, validateArray, validatePlainObject, isIdentifiedDocument } from './utils.js'
-import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, Document, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertParams, DocumentInsertResponse, DocumentLookupFailure, DocumentViewParams, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse } from '../types/nano.js'
-import type { DocId, DocRev, DocTranformer, FetchOptions, FindOptions, FindQuery, JsonRequest, NewDoc, TestFunction, RecoveredDoc, UpdateOptions, ViewKey, DocumentDeletedFailure, RevInfo, DocumentRevertResponse } from 'types/types.js'
+import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, Document, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertParams, DocumentInsertResponse, DocumentLookupFailure, DocumentViewQuery, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse } from '../types/nano.js'
+import type { DocId, DocRev, DocTranformer, FetchOptions, FindOptions, FindQuery, JsonRequest, NewDoc, TestFunction, RecoveredDoc, UpdateOptions, ViewKey, DocumentDeletedFailure, RevInfo, DocumentRevertResponse, DocumentViewKeysQuery } from 'types/types.js'
 
 export default function (jsonRequest: JsonRequest, dbName: string) {
   validateString(dbName, 'dbName')
@@ -142,9 +142,9 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       return res.data
     },
 
-    buildQueryString: (query?: DocumentViewParams) => buildSanitizedViewQueryString(query, viewQueryKeys),
+    buildQueryString: (query?: DocumentViewQuery) => buildSanitizedViewQueryString(query, viewQueryKeys),
 
-    viewQuery: async <K, V, D, ID>(path: string, query?: DocumentViewParams) => {
+    viewQuery: async <K, V, D, ID>(path: string, query?: DocumentViewQuery) => {
       const qs = db.buildQueryString(query)
       const url = `/${dbName}/${path}?${qs}`
       const res = await jsonRequest<DocumentViewResponse<K, V, D, ID>>('GET', url)
@@ -152,18 +152,18 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       else throw buildErrorFromRes(res, `error reading view ${path}`)
     },
 
-    view: async <K, V, D, ID>(designName: string, viewName: string, query: DocumentViewParams) => {
+    view: async <K, V, D, ID>(designName: string, viewName: string, query: DocumentViewQuery) => {
       validateString(designName, 'design doc name')
       validateString(viewName, 'view name')
       validatePlainObject(query, 'query')
       return db.viewQuery<K, V, D, ID>(`_design/${designName}/_view/${viewName}`, query)
     },
 
-    allDocs: async <K, V, D, ID>(query?: DocumentViewParams) => {
+    allDocs: async <K, V, D, ID>(query?: DocumentViewQuery) => {
       return db.viewQuery<K, V, D, ID>('_all_docs', query)
     },
 
-    viewKeysQuery: async <K, V, D, ID>(path: string, keys: ViewKey[], query: DocumentViewParams = {}) => {
+    viewKeysQuery: async <K, V, D, ID>(path: string, keys: ViewKey[], query: DocumentViewKeysQuery = {}) => {
       validateString(path, 'path')
       validateArray(keys, 'keys')
       const qs = db.buildQueryString(query)
@@ -173,7 +173,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       else throw buildErrorFromRes(res, `error reading view ${path}`)
     },
 
-    viewKeys: async <K, V, D, ID>(designName: string, viewName: string, keys: ViewKey[], query?: DocumentViewParams) => {
+    viewKeys: async <K, V, D, ID>(designName: string, viewName: string, keys: ViewKey[], query?: DocumentViewKeysQuery) => {
       validateString(designName, 'design doc name')
       validateString(viewName, 'view name')
       validateArray(keys, 'keys')
@@ -183,7 +183,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
     },
 
     // http://docs.couchdb.org/en/latest/db/database/bulk-db.html#post--db-_all_docs
-    allDocsKeys: async (keys: ViewKey[], query: DocumentViewParams) => {
+    allDocsKeys: async (keys: ViewKey[], query: DocumentViewKeysQuery) => {
       return db.viewKeysQuery('_all_docs', keys, query)
     },
 

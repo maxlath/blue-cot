@@ -1,4 +1,4 @@
-import type { Document, DocumentInsertResponse, DocumentViewParams } from './nano.js'
+import type { Document, DocumentInsertResponse, DocumentViewQuery } from './nano.js'
 
 export type DocId = string
 export type DocRev = string
@@ -70,8 +70,11 @@ export interface DocumentDeletedFailure {
   error: 'deleted'
 }
 
-export interface DocumentViewWithDocsParams extends Omit<DocumentViewParams, 'include_docs'> {
+export type DocumentViewKeysQuery = Omit<DocumentViewQuery, 'keys'>
+
+export interface DocumentViewWithDocsQuery extends Omit<DocumentViewQuery, 'include_docs'> {
   include_docs: true
 }
 
 export type DocumentRevertResponse = (DocumentInsertResponse & { revert?: DocRev })
+

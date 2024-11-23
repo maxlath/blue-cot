@@ -334,7 +334,7 @@ export interface ChangesReaderScope {
 //   view<V>(
 //     designname: string,
 //     viewname: string,
-//     params: DocumentViewParams,
+//     params: DocumentViewQuery,
 //     callback?: Callback<DocumentViewResponse<V, D>>
 //   ): Promise<DocumentViewResponse<V, D>>
 //   /** Executes a view from a Design Document as a stream
@@ -348,7 +348,7 @@ export interface ChangesReaderScope {
 //   viewAsStream<V>(
 //     designname: string,
 //     viewname: string,
-//     params: DocumentViewParams
+//     params: DocumentViewQuery
 //   ): NodeJS.ReadStream
 //   /** Applies a list function to a view.
 //    * @see Docs: {@link http://docs.couchdb.org/en/latest/api/ddoc/render.html#db-design-design-doc-list-list-name-view-name} */
@@ -364,7 +364,7 @@ export interface ChangesReaderScope {
 //     designname: string,
 //     viewname: string,
 //     listname: string,
-//     params: DocumentViewParams,
+//     params: DocumentViewQuery,
 //     callback?: Callback<any>
 //   ): Promise<any>
 //   /** Applies a list function to a view as a stream.
@@ -381,7 +381,7 @@ export interface ChangesReaderScope {
 //     designname: string,
 //     viewname: string,
 //     listname: string,
-//     params: DocumentViewParams,
+//     params: DocumentViewQuery,
 //     callback?: Callback<any>
 //   ): NodeJS.ReadStream
 //   /** Run Mango query.
@@ -425,7 +425,7 @@ export interface ChangesReaderScope {
 //     partitionKey: string,
 //     designname: string,
 //     viewname: string,
-//     params: DocumentViewParams,
+//     params: DocumentViewQuery,
 //     callback?: Callback<DocumentViewResponse<V, D>>
 //   ): Promise<DocumentViewResponse<V, D>>
 //   /** Executes the specified view function in a single partition from the specified design document, as a stream
@@ -434,7 +434,7 @@ export interface ChangesReaderScope {
 //     partitionKey: string,
 //     designname: string,
 //     viewname: string,
-//     params: DocumentViewParams
+//     params: DocumentViewQuery
 //   ): NodeJS.ReadStream
 // }
 
@@ -1381,7 +1381,7 @@ export interface DocumentSearchParams {
 
 /** View query parameters.
  * @see Docs: {@link http://docs.couchdb.org/en/latest/api/ddoc/views.html#get--db-_design-ddoc-_view-view} */
-export interface DocumentViewParams {
+export interface DocumentViewQuery {
   /** Includes conflicts information in response.
    *
    * Ignored if include_docs isn’t true.
@@ -1445,7 +1445,11 @@ export interface DocumentViewParams {
   /** Return only documents that match the specified key. */
   key?: unknown
 
-  /** Return only documents where the key matches one of the keys specified in the array. */
+  /**
+  * @deprecated Return only documents where the key matches one of the keys specified in the array.
+  * Avoid using it when requesting many keys, as keys are sent in the querystring: rather use functions based on db.viewKeysQuery,
+  * which sends keys in a POST request body
+  */
   keys?: unknown[]
 
   /** Limit the number of the returned documents to the specified number. */
