@@ -154,7 +154,7 @@ export interface ChangesReaderScope {
 //    * @see Docs: {@link http://docs.couchdb.org/en/latest/api/server/common.html#post--_replicate} */
 //   replicate(
 //     target: string | DocumentScope<D>,
-//     options: any,
+//     options: unknown,
 //     callback?: Callback<DatabaseReplicateResponse>
 //   ): Promise<DatabaseReplicateResponse>
 //   /** Request compaction on this database.
@@ -205,7 +205,7 @@ export interface ChangesReaderScope {
 //   bulk(docs: BulkModifyDocsWrapper, callback?: Callback<DocumentBulkResponse[]>): Promise<DocumentBulkResponse[]>
 //   /** Bulk insert/update/delete multiple documents in this database, with options.
 //    * @see Docs: {@link https://docs.couchdb.org/en/stable/api/database/bulk-api.html#db-bulk-docs} */
-//   bulk(docs: BulkModifyDocsWrapper, params: any, callback?: Callback<DocumentInsertResponse[]>): Promise<DocumentInsertResponse[]>
+//   bulk(docs: BulkModifyDocsWrapper, params: unknown, callback?: Callback<DocumentInsertResponse[]>): Promise<DocumentInsertResponse[]>
 //   /** List documents from this database.
 //    * @see Docs: {@link http://docs.couchdb.org/en/latest/api/database/bulk-api.html#get--db-_all_docs} */
 //   list(callback?: Callback<DocumentListResponse<D>>): Promise<DocumentListResponse<D>>
@@ -261,7 +261,7 @@ export interface ChangesReaderScope {
 //     designname: string,
 //     showname: string,
 //     doc_id: string,
-//     params: any,
+//     params: unknown,
 //     callback?: Callback<any>
 //   ): Promise<any>
 //   /** Executes an update function on the server side for the supplied document id.
@@ -278,7 +278,7 @@ export interface ChangesReaderScope {
 //     designname: string,
 //     updatename: string,
 //     docname: string,
-//     body: any,
+//     body: unknown,
 //     callback?: Callback<R>
 //   ): Promise<R>
 //   /** Executes an update function on the server side for the supplied document id.
@@ -295,7 +295,7 @@ export interface ChangesReaderScope {
 //     designname: string,
 //     updatename: string,
 //     docname: string,
-//     body: any,
+//     body: unknown,
 //     callback?: Callback<OkResponse>
 //   ): Promise<OkResponse>
 //   /** Executes a search request against the named index.
@@ -318,8 +318,8 @@ export interface ChangesReaderScope {
 //   baseView<V>(
 //     designname: string,
 //     viewname: string,
-//     meta: any,
-//     params?: any,
+//     meta: unknown,
+//     params?: unknown,
 //     callback?: Callback<any>
 //   ): Promise<any>
 //   /** Executes a view from a Design Document.
@@ -441,8 +441,8 @@ export interface ChangesReaderScope {
 /** attachment data */
 export interface AttachmentData {
   name: string
-  data: any
-  content_type: any
+  data: unknown
+  content_type: unknown
 }
 
 // /** Multi-part HTTP functions */
@@ -452,13 +452,13 @@ export interface AttachmentData {
 //   insert(doc: D, attachments: AttachmentData[], callback?: Callback<DocumentInsertResponse>): Promise<DocumentInsertResponse>
 //   /** Create doc with multiple attachments using mutlipart HTTP request with options.
 //    * @see Docs: {@link http://docs.couchdb.org/en/latest/api/document/common.html#creating-multiple-attachments} */
-//   insert(doc: D, attachments: AttachmentData[], params: any, callback?: Callback<DocumentInsertResponse>): Promise<DocumentInsertResponse>
+//   insert(doc: D, attachments: AttachmentData[], params: unknown, callback?: Callback<DocumentInsertResponse>): Promise<DocumentInsertResponse>
 //   /** Fetch document and its attachments as a multipart HTTP request.
 //    * @see Docs: {@link https://docs.couchdb.org/en/latest/api/document/common.html#efficient-multiple-attachments-retrieving} */
 //   get(docname: string, callback?: Callback<any>): Promise<any>
 //   /** Fetch document and its attachments as a multipart HTTP request with options.
 //    * @see Docs: {@link https://docs.couchdb.org/en/latest/api/document/common.html#efficient-multiple-attachments-retrieving} */
-//   get(docname: string, params: any, callback?: Callback<any>): Promise<any>
+//   get(docname: string, params: unknown, callback?: Callback<any>): Promise<any>
 // }
 
 /** Attachment functions */
@@ -468,7 +468,7 @@ export interface AttachmentData {
 //   insert(
 //     docname: string,
 //     attname: string,
-//     att: any,
+//     att: unknown,
 //     contenttype: string,
 //     callback?: Callback<DocumentInsertResponse>
 //   ): Promise<DocumentInsertResponse>
@@ -477,9 +477,9 @@ export interface AttachmentData {
 //   insert(
 //     docname: string,
 //     attname: string,
-//     att: any,
+//     att: unknown,
 //     contenttype: string,
-//     params: any,
+//     params: unknown,
 //     callback?: Callback<DocumentInsertResponse>
 //   ): Promise<DocumentInsertResponse>
 //   /** Get an attachment.
@@ -493,7 +493,7 @@ export interface AttachmentData {
 //   get(
 //     docname: string,
 //     attname: string,
-//     params: any,
+//     params: unknown,
 //     callback?: Callback<Buffer>
 //   ): Promise<Buffer>
 //   /** Delete an attachment.
@@ -504,7 +504,7 @@ export interface AttachmentData {
 //   destroy(
 //     docname: string,
 //     attname: string,
-//     params: any,
+//     params: unknown,
 //     callback?: Callback<any>
 //   ): Promise<any>
 // }
@@ -523,12 +523,12 @@ export interface RequestOptions {
   path?: string
   doc?: string
   att?: string
-  qs?: any
+  qs?: unknown
   content_type?: string
-  headers?: any
-  body?: any
+  headers?: unknown
+  body?: unknown
   encoding?: string
-  multipart?: any[]
+  multipart?: unknown[]
 }
 
 /** Global changes feed paramters.
@@ -541,7 +541,7 @@ export interface UpdatesParams {
 }
 
 export interface BulkModifyDocsWrapper {
-  docs: any[]
+  docs: unknown[]
 }
 
 export interface BulkFetchDocsWrapper {
@@ -858,7 +858,7 @@ export interface DatabaseChangesResultItem {
   id: string
 
   /** Update sequence. */
-  seq: any
+  seq: unknown
 
   /** true if the document is deleted. */
   deleted: boolean
@@ -868,7 +868,7 @@ export interface DatabaseChangesResultItem {
  * @see Docs: {@link http://docs.couchdb.org/en/latest/api/database/changes.html#get--db-_changes} */
 export interface DatabaseChangesResponse {
   /** Last change update sequence */
-  last_seq: any
+  last_seq: unknown
 
   /** Count of remaining items in the feed */
   pending: number
@@ -897,10 +897,10 @@ export interface DatabaseSessionResponse {
   ok: boolean
 
   /** User context for the current user */
-  userCtx: any
+  userCtx: unknown
 
   /** Server authentication configuration */
-  info: any
+  info: unknown
 }
 
 /** Database global changes result item.
@@ -913,7 +913,7 @@ export interface DatabaseUpdatesResultItem {
   type: string
 
   /** Update sequence of the event. */
-  seq: any
+  seq: unknown
 }
 
 /** Global changes response.
@@ -1028,7 +1028,7 @@ export interface DocumentGetParams {
   /** Includes attachments only since specified revisions.
    *
    * Doesn’t includes attachments for specified revisions. */
-  atts_since?: any[]
+  atts_since?: unknown[]
 
   /** Includes information about conflicts in document.
    *
@@ -1058,7 +1058,7 @@ export interface DocumentGetParams {
   /** Retrieves documents of specified leaf revisions.
    *
    * Additionally, it accepts value as all to return all leaf revisions. */
-  open_revs?: any[]
+  open_revs?: unknown[]
 
   /** Retrieves document of specified revision. */
   rev?: string
@@ -1085,13 +1085,13 @@ export interface DocumentGetResponse {
   _deleted?: boolean
 
   /** Attachment’s stubs. Available if document has any attachments. */
-  _attachments?: any
+  _attachments?: unknown
 
   /** List of conflicted revisions. Available if requested with conflicts=true query parameter. */
-  _conflicts?: any[]
+  _conflicts?: unknown[]
 
   /** List of deleted conflicted revisions. Available if requested with deleted_conflicts=true query parameter. */
-  _deleted_conflicts?: any[]
+  _deleted_conflicts?: unknown[]
 
   /** Document’s update sequence in current database. Available if requested with local_seq=true query parameter. */
   _local_seq?: string
@@ -1099,12 +1099,12 @@ export interface DocumentGetResponse {
   /** List of objects with information about local revisions and their status.
    *
    * Available if requested with open_revs query parameter. */
-  _revs_info?: any[]
+  _revs_info?: unknown[]
 
   /** List of local revision tokens without.
    *
    * Available if requested with revs=true query parameter. */
-  _revisions?: any
+  _revisions?: unknown
 }
 
 /** Document head response headers:
@@ -1395,10 +1395,10 @@ export interface DocumentViewParams {
   descending?: boolean
 
   /** Stop returning records when the specified key is reached. */
-  endkey?: any
+  endkey?: unknown
 
   /** Alias for endkey param. */
-  end_key?: any
+  end_key?: unknown
 
   /** Stop returning records when the specified document ID is reached.
    *
@@ -1443,10 +1443,10 @@ export interface DocumentViewParams {
   inclusive_end?: boolean
 
   /** Return only documents that match the specified key. */
-  key?: any
+  key?: unknown
 
   /** Return only documents where the key matches one of the keys specified in the array. */
-  keys?: any[]
+  keys?: unknown[]
 
   /** Limit the number of the returned documents to the specified number. */
   limit?: number
@@ -1485,10 +1485,10 @@ export interface DocumentViewParams {
   stale?: string
 
   /** Return records starting with the specified key. */
-  startkey?: any
+  startkey?: unknown
 
   /** Alias for startkey param */
-  start_key?: any
+  start_key?: unknown
 
   /** Return records starting with the specified document ID.
    *
@@ -1531,7 +1531,7 @@ export interface DocumentViewResponse<K, V, D, ID = string> {
   total_rows: number
 
   /** Current update sequence for the database */
-  update_seq?: any
+  update_seq?: unknown
 }
 
 type MangoValue = number | string | Date | boolean | object | null
