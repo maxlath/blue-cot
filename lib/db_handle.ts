@@ -190,7 +190,8 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
     fetch: async <D>(keys: ViewKey[], options?: FetchOptions) => {
       validateArray(keys, 'keys')
       const throwOnErrors = options != null && options.throwOnErrors === true
-      const { rows }: { rows: DocumentFetchResponse<D>['rows'] } = await db.viewKeysQuery<any, D>('_all_docs', keys, { include_docs: true })
+      const res = await db.allDocsKeys(keys, { include_docs: true })
+      const rows = res.rows as DocumentFetchResponse<D>['rows']
       const docs: D[] = []
       const errors: (DocumentLookupFailure | DocumentDeletedFailure)[] = []
       for (const row of rows) {

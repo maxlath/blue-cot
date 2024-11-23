@@ -474,7 +474,7 @@ describe('DbHandle', () => {
       res.index.should.be.an.Object()
       res.opts.should.be.an.Object()
       res.mrargs.should.be.an.Object()
-      res.fields.should.be.a.String()
+      res.fields.should.be.an.Array()
     })
   })
 })
