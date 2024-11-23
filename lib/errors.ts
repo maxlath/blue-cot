@@ -15,7 +15,7 @@ export function buildErrorFromRes (res, message) {
   try {
     bodyStr = JSON.stringify(body)
   } catch (err) {
-    console.log("couldn't parse body")
+    console.error("couldn't parse response body", err)
     bodyStr = body
   }
 
