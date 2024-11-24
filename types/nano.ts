@@ -5,6 +5,7 @@
 
 /// <reference types="node" />
 
+import type { ViewKey, ViewValue } from './types.js'
 import type { EventEmitter } from 'node:events'
 
 export interface UUIDObject {
@@ -1518,7 +1519,7 @@ export interface DocumentViewQuery {
 
 /** View response.
  * @see Docs: {@link http://docs.couchdb.org/en/latest/api/ddoc/views.html#get--db-_design-ddoc-_view-view} */
-export interface DocumentViewResponse<K, V, D extends Document> {
+export interface DocumentViewResponse<D extends Document = Document, K extends ViewKey = ViewKey, V = ViewValue> {
   /** Offset where the document list started. */
   offset: number
 

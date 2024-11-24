@@ -7,8 +7,8 @@ export type DesignDocName = string
 export type ViewName = string
 
 export interface NewDoc {
-  _id: never
-  _rev: never
+  _id?: DocId
+  // _rev: never // Setting it to never triggers "_rev is declared here." errors
 }
 
 export interface RecoveredDoc {
@@ -35,6 +35,7 @@ export interface FindOptions {
 export type MixedKeyElement = string | number | object
 
 export type ViewKey = string | number | MixedKeyElement[] | { [key: string]: MixedKeyElement }
+export type ViewValue = unknown
 
 export interface FetchOptions {
   throwOnErrors?: boolean
@@ -77,4 +78,3 @@ export interface DocumentViewWithDocsQuery extends Omit<DocumentViewQuery, 'incl
 }
 
 export type DocumentRevertResponse = (DocumentInsertResponse & { revert?: DocRev })
-
