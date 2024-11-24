@@ -578,14 +578,15 @@ export interface Document extends IdentifiedDocument, RevisionedDocument {
 // View
 // -------------------------------------
 
-type DocumentInfer<D> = (doc: D & Document) => void
-export interface View<D> {
+type DocumentInfer<D extends Document> = (doc: D) => void
+
+export interface View<D extends Document> {
   map?: string | DocumentInfer<D>
   reduce?: string | DocumentInfer<D>
 
 }
 
-export interface ViewDocument<D> extends IdentifiedDocument {
+export interface ViewDocument<D extends Document> extends IdentifiedDocument {
   views: {
     [name: string]: View<D>
   }
@@ -943,8 +944,8 @@ export interface DocumentResponseRowMeta {
 }
 
 /** Bulk API per-document response with document body. */
-export interface DocumentResponseRow<D> extends DocumentResponseRowMeta {
-  doc?: D & Document
+export interface DocumentResponseRow<D extends Document> extends DocumentResponseRowMeta {
+  doc?: D
 }
 
 /** Bulk API response.
@@ -1190,7 +1191,7 @@ export interface DocumentListParams {
 
 /** _all_docs response.
  * @see Docs: {@link http://docs.couchdb.org/en/latest/api/database/bulk-api.html#get--db-_all_docs} */
-export interface DocumentListResponse<D> {
+export interface DocumentListResponse<D extends Document> {
   /** Offset where the document list started. */
   offset: number
 
@@ -1235,7 +1236,7 @@ export interface DocumentLookupFailure {
 
 /** Fetch with POST _all_docs response
  * @see Docs: {@link https://docs.couchdb.org/en/latest/api/database/bulk-api.html#post--db-_all_docs} */
-export interface DocumentFetchResponse<D> {
+export interface DocumentFetchResponse<D extends Document> {
   offset: number
   rows: Array<DocumentResponseRow<D> | DocumentLookupFailure>
   total_rows: number
@@ -1244,7 +1245,7 @@ export interface DocumentFetchResponse<D> {
 
 /** Fetch revisions response
  * @see Docs: {@link https://docs.couchdb.org/en/latest/api/database/bulk-api.html#post--db-_all_docs} */
-export interface DocumentFetchRevsResponse<D> {
+export interface DocumentFetchRevsResponse<D extends Document> {
   offset: number
   rows: Array<DocumentResponseRow<D> | DocumentLookupFailure>
   total_rows: number
@@ -1517,7 +1518,7 @@ export interface DocumentViewQuery {
 
 /** View response.
  * @see Docs: {@link http://docs.couchdb.org/en/latest/api/ddoc/views.html#get--db-_design-ddoc-_view-view} */
-export interface DocumentViewResponse<K, V, D, ID = string> {
+export interface DocumentViewResponse<K, V, D extends Document> {
   /** Offset where the document list started. */
   offset: number
 
@@ -1525,10 +1526,10 @@ export interface DocumentViewResponse<K, V, D, ID = string> {
    *
    * By default the information returned contains only the document ID and revision. */
   rows: Array<{
-    id: ID
+    id: D['_id']
     key: K
     value: V
-    doc?: D & Document
+    doc?: D
   }>
 
   /** Number of documents in the database/view. */
@@ -1609,27 +1610,6 @@ export interface MangoQuery {
   execution_stats?: boolean
 }
 
-/** Mango response.
- * @see Docs: {@link https://docs.couchdb.org/en/latest/api/database/find.html#db-find}  */
-export interface MangoResponse<D> {
-  /** Array of documents matching the search.
-   *
-   * In each matching document, the fields specified in the fields part of the request body are listed, along with
-   * their values. */
-  docs: (D & { _id: string, _rev: string })[]
-
-  /** A string that enables you to specify which page of results you require.
-   *
-   * Used for paging through result sets. */
-  bookmark?: string
-
-  /** Execution warnings */
-  warning?: string
-
-  /** Basic execution statistics for a specific request. */
-  execution_stats?: MangoExecutionStats
-}
-
 /** Mango execution stats.
  * @see Docs: {@link http://docs.couchdb.org/en/latest/api/database/find.html#execution-statistics} */
 export interface MangoExecutionStats {
@@ -1651,6 +1631,27 @@ export interface MangoExecutionStats {
 
   /** Total execution time in milliseconds as measured by the database. */
   execution_time_ms: number
+}
+
+/** Mango response.
+ * @see Docs: {@link https://docs.couchdb.org/en/latest/api/database/find.html#db-find}  */
+export interface MangoResponse<D extends Document> {
+  /** Array of documents matching the search.
+   *
+   * In each matching document, the fields specified in the fields part of the request body are listed, along with
+   * their values. */
+  docs: D[]
+
+  /** A string that enables you to specify which page of results you require.
+   *
+   * Used for paging through result sets. */
+  bookmark?: string
+
+  /** Execution warnings */
+  warning?: string
+
+  /** Basic execution statistics for a specific request. */
+  execution_stats?: MangoExecutionStats
 }
 
 /** Mango create index parameters.

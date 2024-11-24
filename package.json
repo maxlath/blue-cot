@@ -18,7 +18,8 @@
     "git-pre-commit": "npm run lint && npm test",
     "prepublishOnly": "npm run lint && npm test",
     "postpublish": "git push --tags",
-    "update-toc": "./scripts/update_toc.sh"
+    "update-toc": "./scripts/update_toc.sh",
+    "watch-types": "tsc  --project ./tsconfig.json --watch"
   },
   "files": [
     "config",

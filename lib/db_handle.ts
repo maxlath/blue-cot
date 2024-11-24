@@ -144,42 +144,42 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
 
     buildQueryString: (query?: DocumentViewQuery) => buildSanitizedViewQueryString(query, viewQueryKeys),
 
-    viewQuery: async <K, V, D, ID>(path: string, query?: DocumentViewQuery) => {
+    viewQuery: async <K extends ViewKey, V, D extends Document>(path: string, query?: DocumentViewQuery) => {
       const qs = db.buildQueryString(query)
       const url = `/${dbName}/${path}?${qs}`
-      const res = await jsonRequest<DocumentViewResponse<K, V, D, ID>>('GET', url)
+      const res = await jsonRequest<DocumentViewResponse<K, V, D>>('GET', url)
       if (res.statusCode === 200) return res.data
       else throw buildErrorFromRes(res, `error reading view ${path}`)
     },
 
-    view: async <K, V, D, ID>(designName: string, viewName: string, query: DocumentViewQuery) => {
+    view: async <K extends ViewKey, V, D extends Document>(designName: string, viewName: string, query: DocumentViewQuery) => {
       validateString(designName, 'design doc name')
       validateString(viewName, 'view name')
       validatePlainObject(query, 'query')
-      return db.viewQuery<K, V, D, ID>(`_design/${designName}/_view/${viewName}`, query)
+      return db.viewQuery<K, V, D>(`_design/${designName}/_view/${viewName}`, query)
     },
 
-    allDocs: async <K, V, D, ID>(query?: DocumentViewQuery) => {
-      return db.viewQuery<K, V, D, ID>('_all_docs', query)
+    allDocs: async <K extends ViewKey, V, D extends Document>(query?: DocumentViewQuery) => {
+      return db.viewQuery<K, V, D>('_all_docs', query)
     },
 
-    viewKeysQuery: async <K, V, D, ID>(path: string, keys: ViewKey[], query: DocumentViewKeysQuery = {}) => {
+    viewKeysQuery: async <K extends ViewKey, V, D extends Document>(path: string, keys: ViewKey[], query: DocumentViewKeysQuery = {}) => {
       validateString(path, 'path')
       validateArray(keys, 'keys')
       const qs = db.buildQueryString(query)
       const url = `/${dbName}/${path}?${qs}`
-      const res = await jsonRequest<DocumentViewResponse<K, V, D, ID>>('POST', url, { keys })
+      const res = await jsonRequest<DocumentViewResponse<K, V, D>>('POST', url, { keys })
       if (res.statusCode === 200) return res.data
       else throw buildErrorFromRes(res, `error reading view ${path}`)
     },
 
-    viewKeys: async <K, V, D, ID>(designName: string, viewName: string, keys: ViewKey[], query?: DocumentViewKeysQuery) => {
+    viewKeys: async <K extends ViewKey, V, D extends Document>(designName: string, viewName: string, keys: ViewKey[], query?: DocumentViewKeysQuery) => {
       validateString(designName, 'design doc name')
       validateString(viewName, 'view name')
       validateArray(keys, 'keys')
       validatePlainObject(query, 'query')
       const path = `_design/${designName}/_view/${viewName}`
-      return db.viewKeysQuery<K, V, D, ID>(path, keys, query)
+      return db.viewKeysQuery<K, V, D>(path, keys, query)
     },
 
     // http://docs.couchdb.org/en/latest/db/database/bulk-db.html#post--db-_all_docs
@@ -187,7 +187,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       return db.viewKeysQuery('_all_docs', keys, query)
     },
 
-    fetch: async <D>(keys: ViewKey[], options?: FetchOptions) => {
+    fetch: async <D extends Document>(keys: ViewKey[], options?: FetchOptions) => {
       validateArray(keys, 'keys')
       const throwOnErrors = options != null && options.throwOnErrors === true
       const res = await db.allDocsKeys(keys, { include_docs: true })
@@ -234,7 +234,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       else throw buildErrorFromRes(res, 'error reading _changes')
     },
 
-    find: async <D>(query: FindQuery = {}, options: FindOptions = {}) => {
+    find: async <D extends Document>(query: FindQuery = {}, options: FindOptions = {}) => {
       let endpoint = '_find'
       if (options.explain) endpoint = '_explain'
       const path = `/${dbName}/${endpoint}`
