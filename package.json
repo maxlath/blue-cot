@@ -27,7 +27,7 @@
     "lib",
     "types"
   ],
-  "version": "9.0.4",
+  "version": "9.0.5",
   "main": "dist/lib/cot.js",
   "dependencies": {
     "node-fetch": "^2.6.0",
