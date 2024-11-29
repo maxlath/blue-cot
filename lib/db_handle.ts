@@ -3,13 +3,13 @@ import { buildErrorFromRes, newError } from './errors.js'
 import { changesQueryKeys, viewQueryKeys } from './query_keys.js'
 import { isPlainObject, validateString, validateArray, validatePlainObject, isIdentifiedDocument } from './utils.js'
 import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, Document, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertParams, DocumentInsertResponse, DocumentLookupFailure, DocumentViewQuery, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse } from '../types/nano.js'
-import type { DocId, DocRev, DocTranformer, FetchOptions, FindOptions, FindQuery, JsonRequest, NewDoc, TestFunction, RecoveredDoc, UpdateOptions, ViewKey, DocumentDeletedFailure, RevInfo, DocumentRevertResponse, DocumentViewKeysQuery, ViewValue } from 'types/types.js'
+import type { DocTranformer, FetchOptions, FindOptions, FindQuery, JsonRequest, NewDoc, TestFunction, RecoveredDoc, UpdateOptions, ViewKey, DocumentDeletedFailure, RevInfo, DocumentRevertResponse, DocumentViewKeysQuery, ViewValue } from 'types/types.js'
 
 export default function (jsonRequest: JsonRequest, dbName: string) {
   validateString(dbName, 'dbName')
 
   const db = {
-    docUrl: (docId: DocId) => {
+    docUrl: <D extends Document = Document> (docId: D['_id']) => {
       validateString(docId, 'doc id')
       if (docId.indexOf('_design/') === 0) {
         return '/' + dbName + '/_design/' + encodeURIComponent(docId.substr(8))
@@ -23,7 +23,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       return res.data
     },
 
-    get: async <D> (docId: DocId, docRev?: DocRev) => {
+    get: async <D extends Document = Document> (docId: D['_id'], docRev?: D['_rev']) => {
       let url = db.docUrl(docId)
       if (typeof docRev === 'string') url += `?rev=${docRev}`
       const res = await jsonRequest<DocumentGetResponse & D>('GET', url)
@@ -31,7 +31,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       else throw buildErrorFromRes(res, `error getting doc ${docId}`)
     },
 
-    exists: async (docId: DocId) => {
+    exists: async <D extends Document = Document> (docId: D['_id']) => {
       try {
         const res = await jsonRequest<DocumentGetResponse>('GET', db.docUrl(docId))
         if (res.statusCode === 200) return true
@@ -63,7 +63,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       }
     },
 
-    update: async (docId: DocId, fn: DocTranformer, options: UpdateOptions = {}): Promise<DocumentInsertResponse> => {
+    update: async <D extends Document = Document> (docId: D['_id'], fn: DocTranformer<D>, options: UpdateOptions = {}): Promise<DocumentInsertResponse> => {
       let attempt = 0
       const { createIfMissing } = options
       const tryIt = async () => {
@@ -87,7 +87,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       return tryIt()
     },
 
-    delete: async (docId: DocId, rev: DocRev) => {
+    delete: async <D extends Document = Document> (docId: D['_id'], rev: D['_rev']) => {
       validateString(rev, 'rev')
       const url = db.docUrl(docId) + '?rev=' + encodeURIComponent(rev)
       const res = await jsonRequest<DocumentDestroyResponse>('DELETE', url)
@@ -96,7 +96,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
     },
 
     // Based on http://stackoverflow.com/a/16827094/3324977
-    undelete: async (docId: DocId) => {
+    undelete: async <D extends Document = Document> (docId: D['_id']) => {
       validateString(docId, 'doc id')
       try {
         // Verify that it's indeed a deleted document: if get doesn't throw, there is nothing to undelete
@@ -117,7 +117,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       }
     },
 
-    bulk: async (docs: Document[]) => {
+    bulk: async <D extends Document = Document> (docs: D[]) => {
       validateArray(docs, 'docs')
       const url = `/${dbName}/_bulk_docs`
 
@@ -204,13 +204,13 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       return { docs, errors }
     },
 
-    listRevs: async (docId: DocId) => {
+    listRevs: async <D extends Document = Document> (docId: D['_id']) => {
       const url = db.docUrl(docId) + '?revs_info=true'
       const res = await jsonRequest<DocumentGetResponse>('GET', url)
       return res.data._revs_info as RevInfo[]
     },
 
-    revertLastChange: async (docId: DocId) => {
+    revertLastChange: async <D extends Document = Document> (docId: D['_id']) => {
       const revsInfo = await db.listRevs(docId)
       const currentRevInfo = revsInfo[0]
       // Select only the previous one
@@ -218,7 +218,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       return db.recover(docId, candidatesRevsInfo, currentRevInfo)
     },
 
-    revertToLastVersionWhere: async (docId: DocId, testFn: TestFunction) => {
+    revertToLastVersionWhere: async <D extends Document = Document> (docId: D['_id'], testFn: TestFunction<D>) => {
       const revsInfo = await db.listRevs(docId)
       const currentRevInfo = revsInfo[0]
       const candidatesRevsInfo = revsInfo.slice(1)
@@ -258,7 +258,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       else throw buildErrorFromRes(res, 'postIndex error')
     },
 
-    recover: async (docId: DocId, candidatesRevsInfo: RevInfo[], currentRevInfo: RevInfo, testFn?: TestFunction) => {
+    recover: async <D extends Document = Document> (docId: D['_id'], candidatesRevsInfo: RevInfo[], currentRevInfo: RevInfo, testFn?: TestFunction) => {
       const previousRevInfo = candidatesRevsInfo.shift()
 
       if (previousRevInfo == null) {

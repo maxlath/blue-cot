@@ -16,7 +16,7 @@ export interface RecoveredDoc {
   _rev?: DocRev
 }
 
-export type DocTranformer = (doc: Document) => Document
+export type DocTranformer <D extends Document = Document> = (doc: D) => D
 
 export interface UpdateOptions {
   createIfMissing?: boolean
@@ -41,7 +41,7 @@ export interface FetchOptions {
   throwOnErrors?: boolean
 }
 
-export type TestFunction = (doc: Document) => boolean
+export type TestFunction <D extends Document = Document> = (doc: D) => boolean
 
 export interface API {
   [key: string]: any
