@@ -16,7 +16,7 @@
     "lint": "eslint lib tests",
     "lint-fix": "eslint --fix lib tests",
     "git-pre-commit": "npm run lint && npm test",
-    "prepublishOnly": "npm run lint && npm test",
+    "prepublishOnly": "npm run build && npm run lint && npm test",
     "postpublish": "git push --tags",
     "update-toc": "./scripts/update_toc.sh",
     "watch-types": "tsc --project ./tsconfig.json --watch"
