@@ -6,11 +6,6 @@ export type DbName = string
 export type DesignDocName = string
 export type ViewName = string
 
-export interface NewDoc {
-  _id?: DocId
-  // _rev: never // Setting it to never triggers "_rev is declared here." errors
-}
-
 export interface RecoveredDoc {
   _id: DocId
   _rev?: DocRev
