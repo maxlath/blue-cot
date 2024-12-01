@@ -2,8 +2,8 @@ import querystring from 'node:querystring'
 import { buildErrorFromRes, newError } from './errors.js'
 import { changesQueryKeys, viewQueryKeys } from './query_keys.js'
 import { isPlainObject, validateString, validateArray, validatePlainObject, isIdentifiedDocument } from './utils.js'
-import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, Document, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertParams, DocumentInsertResponse, DocumentLookupFailure, DocumentViewQuery, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse, MaybeDocument } from '../types/nano.js'
-import type { DocTranformer, FetchOptions, FindOptions, FindQuery, JsonRequest, TestFunction, RecoveredDoc, UpdateOptions, ViewKey, DocumentDeletedFailure, RevInfo, DocumentRevertResponse, DocumentViewKeysQuery, ViewValue } from 'types/types.js'
+import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, Document, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertParams, DocumentInsertResponse, DocumentLookupFailure, DocumentViewQuery, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse } from '../types/nano.js'
+import type { DocTranformer, FetchOptions, FindOptions, FindQuery, JsonRequest, NewDoc, TestFunction, RecoveredDoc, UpdateOptions, ViewKey, DocumentDeletedFailure, RevInfo, DocumentRevertResponse, DocumentViewKeysQuery, ViewValue } from 'types/types.js'
 
 export default function (jsonRequest: JsonRequest, dbName: string) {
   validateString(dbName, 'dbName')
@@ -50,7 +50,9 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       else throw buildErrorFromRes(res, `error putting doc ${doc._id}`)
     },
 
-    post: async <D extends MaybeDocument> (doc: D, params?: DocumentInsertParams) => {
+    // Do not replace NewDoc with MaybeDocument to not get type errors such as
+    // 'X' has no properties in common with type 'MaybeDocument'
+    post: async <D extends NewDoc> (doc: D, params?: DocumentInsertParams) => {
       validatePlainObject(doc, 'doc')
       const url = buildUrl(`/${dbName}`, params)
       const res = await jsonRequest<DocumentInsertResponse>('POST', url, doc)
@@ -117,7 +119,9 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       }
     },
 
-    bulk: async <D extends MaybeDocument = MaybeDocument> (docs: D[]) => {
+    // Do not replace NewDoc with MaybeDocument to not get type errors such as
+    // 'X' has no properties in common with type 'MaybeDocument'
+    bulk: async <D extends NewDoc = NewDoc> (docs: D[]) => {
       validateArray(docs, 'docs')
       const url = `/${dbName}/_bulk_docs`
 
