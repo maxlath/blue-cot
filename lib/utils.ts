@@ -8,8 +8,7 @@ const isArray = arr => arr instanceof Array
 
 export const validateString = (str, label) => {
   if (typeof str !== 'string' || str.length === 0) {
-    let errMessage = `invalid ${label}`
-    if (str != null) errMessage += ` ${str} (${typeof str})`
+    const errMessage = `invalid ${label}: ${str} (expected string, got (${typeof str}))`
     throw new TypeError(errMessage)
   }
 }

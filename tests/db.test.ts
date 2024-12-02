@@ -101,7 +101,7 @@ describe('DbHandle', () => {
         await db.delete(null, '2-foo').then(shouldNotBeCalled)
       } catch (err) {
         err.name.should.equal('TypeError')
-        err.message.should.equal('invalid doc id')
+        err.message.should.startWith('invalid doc id')
       }
     })
   })

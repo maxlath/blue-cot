@@ -11,7 +11,7 @@ describe('Validations', () => {
       await db.getDocsByViewQuery()
       .then(shouldNotBeCalled)
       .catch(err => {
-        err.message.should.equal('invalid view name')
+        err.message.should.startWith('invalid view name')
       })
     })
 
@@ -29,7 +29,7 @@ describe('Validations', () => {
       await db.getDocsByViewKeysAndCustomQuery()
       .then(shouldNotBeCalled)
       .catch(err => {
-        err.message.should.equal('invalid view name')
+        err.message.should.startWith('invalid view name')
       })
     })
 
@@ -55,7 +55,7 @@ describe('Validations', () => {
       await db.getDocsByViewKey()
       .then(shouldNotBeCalled)
       .catch(err => {
-        err.message.should.equal('invalid view name')
+        err.message.should.startWith('invalid view name')
       })
     })
 
@@ -73,7 +73,7 @@ describe('Validations', () => {
       await db.findDocByViewKey()
       .then(shouldNotBeCalled)
       .catch(err => {
-        err.message.should.equal('invalid view name')
+        err.message.should.startWith('invalid view name')
       })
     })
 
@@ -91,7 +91,7 @@ describe('Validations', () => {
       await db.getDocsByViewKeys()
       .then(shouldNotBeCalled)
       .catch(err => {
-        err.message.should.equal('invalid view name')
+        err.message.should.startWith('invalid view name')
       })
     })
 
