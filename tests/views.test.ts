@@ -1,6 +1,7 @@
 import config from 'config'
 import should from 'should'
 import cot from '../dist/lib/cot.js'
+import { getArrayOfLength } from './test_db.js'
 import { shouldNotBeCalled, catch404 } from './utils.js'
 
 describe('Validations', () => {
@@ -112,16 +113,12 @@ describe('Views', () => {
     await db.request('DELETE', `/${config.dbName}`).catch(catch404)
     await db.request('PUT', `/${config.dbName}`)
 
-    const docPromises = []
-    let i = 1
-    while (i < 10) {
-      const doc = {
+    const batch = getArrayOfLength(10).map((x, i) => {
+      return {
         _id: `doc-${i}`,
         key: `key-${i}`,
       }
-      docPromises.push(db.post(doc))
-      i++
-    }
+    })
 
     const designDoc = {
       _id: '_design/test',
@@ -135,9 +132,8 @@ describe('Views', () => {
       },
     }
 
-    docPromises.push(db.post(designDoc))
-
-    await Promise.all(docPromises)
+    batch.push(designDoc)
+    await db.bulk(batch)
   })
 
   describe('#view', () => {

@@ -4,12 +4,12 @@ import { catch404, wait } from './utils.js'
 
 let testDb
 
-const getTestDb = () => {
+async function getTestDb () {
   testDb = testDb || cot(config.cot)(config.dbName, 'test')
   return testDb
 }
 
-const putSecurityDoc = () => {
+function putSecurityDoc () {
   const doc = {
     admins: { names: [ config.cot.user ] },
     members: { names: [ config.cot.user ] },
@@ -17,7 +17,7 @@ const putSecurityDoc = () => {
   return testDb.request('PUT', `/${config.dbName}/_security`, doc)
 }
 
-const resetTestDb = async function () {
+export async function resetTestDb (docCount: number = 10) {
   getTestDb()
   await testDb.request('DELETE', `/${config.dbName}`).catch(catch404)
   await wait(100)
@@ -25,35 +25,27 @@ const resetTestDb = async function () {
 
   if (config.cot.user) await putSecurityDoc()
 
-  const docPromises = []
-  let i = 1
-  while (i < 10) {
-    const doc = {
+  const batch = getArrayOfLength(docCount).map((x, i) => {
+    return {
       _id: `doc-${i}`,
       key: `key-${i}`,
     }
-    docPromises.push(testDb.post(doc))
-    i++
-  }
+  })
 
   const designDoc = {
     _id: '_design/test',
     views: {
-      testView: {
-        map: 'function(d) { emit(d.name, null) }',
-      },
       byKey: {
         map: 'function (doc) { emit(doc.key, null) }',
       },
     },
   }
 
-  docPromises.push(testDb.post(designDoc))
+  batch.push(designDoc)
 
-  await Promise.all(docPromises)
+  await testDb.bulk(batch)
 }
 
-export default {
-  getTestDb,
-  resetTestDb,
+export function getArrayOfLength (length: number) {
+  return new Array(length).fill()
 }
