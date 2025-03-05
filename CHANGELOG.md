@@ -1,6 +1,10 @@
 # CHANGELOG
 *versions follow [SemVer](http://semver.org)*
 
+## 9.1.0 - 2025-03-05
+New Features:
+* Allow to configure the default http agent `maxSockets` value. Default = 25
+
 ## 9.0.0 - 2024-03-07
 **BREAKING CHANGES**:
 - rename `viewByKey` => `getDocsByViewKey`
