@@ -45,5 +45,7 @@ function getAgent (protocol: 'http' | 'https', maxSockets = 25) {
   return new Agent({
     keepAlive: true,
     maxSockets,
+    // Copying the value from https://github.com/apache/couchdb-nano/blob/2ceb3dd/lib/nano.js#L21
+    keepAliveMsecs: 30000,
   })
 }
