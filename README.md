@@ -82,7 +82,7 @@ const config = {
 
   // Optinonal
   // Logs the generated URLs, body, and response time
-  debug: true, // default: false
+  debug: true, // Default: false
 
   // The default http agent already sets keepAlive=true
   // but if for some reason you want to pass your own http agent, you can.
@@ -92,6 +92,9 @@ const config = {
   // And the recommandations of the official CouchDB NodeJS lib
   // https://github.com/apache/couchdb-nano#pool-size-and-open-sockets
   agent: myAgent
+  // If no custom agent is passed, you can configure the default one's maxSockets
+  // See again https://github.com/apache/couchdb-nano#pool-size-and-open-sockets
+  maxSockets: 25, // Default: 25
 }
 
 const getDbApi = bluecot(config)
