@@ -34,3 +34,5 @@ export const validateNonNull = (obj, label) => {
 export function isIdentifiedDocument (doc): doc is IdentifiedDocument {
   return doc._id != null
 }
+
+export const wait = ms => new Promise(resolve => setTimeout(resolve, ms))

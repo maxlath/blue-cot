@@ -1,5 +1,7 @@
+import { newError } from './errors.js'
 import getSessionCookie from './get_session_cookie.js'
 import request from './request.js'
+import { wait } from './utils.js'
 import type { Agent } from 'node:http'
 import type { FormattedError } from 'types/types.js'
 
@@ -43,9 +45,26 @@ export function jsonRequestFactory (config) {
   }
 }
 
-async function tryRequest <ResponseBody> (url, params, config) {
-  const res = await request(url, params)
-  return handleResponse<ResponseBody>(res, url, params, config)
+async function tryRequest <ResponseBody> (url, params, config, attempt = 1) {
+  try {
+    const res = await request(url, params)
+    return await handleResponse<ResponseBody>(res, url, params, config)
+  } catch (err) {
+    // - ERR_STREAM_PREMATURE_CLOSE: thrown by node-fetch. It can happen when the maxSockets limit is reached.
+    //   Seems to be more likely to happen during the body reception.
+    //   See https://github.com/node-fetch/node-fetch/issues/1576#issuecomment-1694418865
+    if (err.code === 'ERR_STREAM_PREMATURE_CLOSE' && attempt < 20) {
+      // Generate a better stack trace that what node-fetch returns
+      const err2 = newError('json request error', 500, { url, method: params.method, body: params.body })
+      err2.cause = err
+      if (config.debug) console.warn(`[blue-cot retrying after ${err.code})]`, err2)
+      const delayBeforeRetry = 500 * attempt ** 2
+      await wait(delayBeforeRetry)
+      return tryRequest(url, params, config, attempt + 1)
+    } else {
+      throw err
+    }
+  }
 }
 
 async function handleResponse <ResponseBody> (res, url, params, config) {

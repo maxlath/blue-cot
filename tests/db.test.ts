@@ -68,13 +68,12 @@ describe('DbHandle', () => {
       doc.name.should.equal('Will Conant')
     })
 
-    it('should return a 404 when a doc === missing', done => {
-      db.get('missing-doc-id')
+    it('should return a 404 when a doc === missing', async () => {
+      await db.get('missing-doc-id')
+      .then(shouldNotBeCalled)
       .catch(err => {
         err.statusCode.should.equal(404)
-        done()
       })
-      .catch(done)
     })
 
     it('should return a specific version when passed a rev', async () => {
