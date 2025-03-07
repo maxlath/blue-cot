@@ -43,12 +43,12 @@ export function jsonRequestFactory (config) {
   }
 }
 
-const tryRequest = async <ResponseBody>(url, params, config) => {
+async function tryRequest <ResponseBody> (url, params, config) {
   const res = await request(url, params)
   return handleResponse<ResponseBody>(res, url, params, config)
 }
 
-const handleResponse = async <ResponseBody>(res, url, params, config) => {
+async function handleResponse <ResponseBody> (res, url, params, config) {
   res.data = await res.json() as ResponseBody
   res.statusCode = res.status
 
@@ -80,7 +80,7 @@ function requestError (res, url, params) {
   return err
 }
 
-const logRequest = (url, params, res) => {
+function logRequest (url, params, res) {
   const { body, start } = params
   const elapsedTime = Date.now() - start
   const bodyStr = body ? `${body} ` : ''
