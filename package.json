@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "build": "./scripts/build.sh",
-    "test": "npm run build && mocha tests/*.test.ts",
+    "test": "npm run build && mocha $MOCHA_OPTIONS tests/*.test.ts",
     "lint": "eslint lib tests",
     "lint-fix": "eslint --fix lib tests",
     "git-pre-commit": "npm run lint && npm test",
