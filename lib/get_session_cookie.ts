@@ -1,15 +1,16 @@
-import request from './request.js'
+import { request } from './request.js'
+import type { Config } from './config_parser.js'
 
 let sessionCookieRequests = 0
 
-export default async config => {
-  const { host, username, password, debug, agent } = config
+export async function getSessionCookie (config: Config) {
+  const { origin, username, password, debug, agent } = config
 
   if (debug) {
     console.log('session cookie requests', ++sessionCookieRequests)
   }
 
-  const res = await request(`${host}/_session`, {
+  const res = await request(`${origin}/_session`, {
     method: 'post',
     headers: {
       'content-type': 'application/json',
@@ -18,7 +19,7 @@ export default async config => {
     },
     agent,
     body: JSON.stringify({ name: username, password }),
-  })
+  }, config)
 
   if (res.status >= 400) {
     const { error, reason } = await res.json()
@@ -29,6 +30,6 @@ export default async config => {
   }
 }
 
-const getBasicCredentials = (username, password) => {
+function getBasicCredentials (username: string, password: string) {
   return Buffer.from(`${username}:${password}`).toString('base64')
 }

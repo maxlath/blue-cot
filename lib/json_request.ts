@@ -1,31 +1,31 @@
 import { newError } from './errors.js'
-import getSessionCookie from './get_session_cookie.js'
-import request from './request.js'
+import { getSessionCookie } from './get_session_cookie.js'
+import { request } from './request.js'
 import { wait } from './utils.js'
-import type { Agent } from 'node:http'
+import type { Config } from './config_parser.js'
 import type { FormattedError } from 'types/types.js'
 
 interface JsonRequestParams {
   method: string,
   headers: Record<string, string>,
-  agent: Agent,
+  agent: Config['agent'],
   attempt: number
   start?: number
   body?: string
 }
 
-export function jsonRequestFactory (config) {
-  const { host, debug, agent } = config
+export function jsonRequestFactory (config: Config) {
+  const { origin, debug, agent } = config
 
   // Headers are shared between requests, so that session cookies
   // are re-requested only when needed
   const headers = {
     accept: 'application/json',
-    host: config.hostHeader,
+    host: config.host,
   }
 
   return async function jsonRequest<ResponseBody> (method, path, body) {
-    const url = `${host}${path}`
+    const url = `${origin}${path}`
     const params: JsonRequestParams = {
       method,
       headers,
@@ -47,7 +47,7 @@ export function jsonRequestFactory (config) {
 
 async function tryRequest <ResponseBody> (url, params, config, attempt = 1) {
   try {
-    const res = await request(url, params)
+    const res = await request(url, params, config)
     return await handleResponse<ResponseBody>(res, url, params, config)
   } catch (err) {
     // - ERR_STREAM_PREMATURE_CLOSE: thrown by node-fetch. It can happen when the maxSockets limit is reached.
@@ -57,7 +57,7 @@ async function tryRequest <ResponseBody> (url, params, config, attempt = 1) {
       // Generate a better stack trace that what node-fetch returns
       const err2 = newError('json request error', 500, { url, method: params.method, body: params.body })
       err2.cause = err
-      if (config.debug) console.warn(`[blue-cot retrying after ${err.code})]`, err2)
+      if (config.debug || attempt > 1) console.warn(`[blue-cot retrying after ${err.code})]`, err2)
       const delayBeforeRetry = 500 * attempt ** 2
       await wait(delayBeforeRetry)
       return tryRequest(url, params, config, attempt + 1)
@@ -67,7 +67,7 @@ async function tryRequest <ResponseBody> (url, params, config, attempt = 1) {
   }
 }
 
-async function handleResponse <ResponseBody> (res, url, params, config) {
+async function handleResponse <ResponseBody> (res, url: string, params, config: Config) {
   res.data = await res.json() as ResponseBody
   res.statusCode = res.status
 

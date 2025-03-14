@@ -2,8 +2,6 @@ import fetch from 'node-fetch'
 import { newError } from './errors.js'
 import { wait } from './utils.js'
 
-export default (url, options) => tryRequest(url, options)
-
 const retryableErrors = [
   // aka 'socket hangup' errors, as this might be due to a persistant connection
   // (agent with keepAlive=true) that was closed because of another error, so retrying
@@ -16,18 +14,18 @@ const retryableErrors = [
   'EPIPE',
 ] as const
 
-async function tryRequest (url, options, attempt = 1) {
+export async function request (url: fetch.RequestInfo, fetchOptions: fetch.RequestInit, config, attempt = 1) {
   try {
-    return await fetch(url, options)
+    return await fetch(url, fetchOptions)
   } catch (err) {
     // Generate a better stack trace that what node-fetch returns
-    const err2 = newError('blue-cot request error', 500, { url, method: options.method, body: options.body, attempt })
+    const err2 = newError('blue-cot request error', 500, { url, method: fetchOptions.method, body: fetchOptions.body, attempt })
     err2.cause = err
     if ((retryableErrors.includes(err.code)) && attempt < 20) {
       const delayBeforeRetry = 500 * attempt ** 2
       await wait(delayBeforeRetry)
-      console.warn(`[blue-cot retrying after ${err.code} (attempt: ${attempt})]`, err)
-      return tryRequest(url, options, ++attempt)
+      if (config.debug || attempt > 1) console.warn(`[blue-cot retrying after ${err.code} (attempt: ${attempt})]`, err)
+      return request(url, fetchOptions, config, ++attempt)
     } else {
       throw err2
     }

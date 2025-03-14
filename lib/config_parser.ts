@@ -13,24 +13,31 @@ export interface ConfigParams {
   maxSockets?: number
 }
 
+export interface Config {
+  origin: string
+  host: string
+  debug: boolean
+  agent: HttpAgent | HttpsAgent
+  username: string
+  password: string
+}
+
 export default ({ protocol, hostname, port, username, password, debug, agent, maxSockets }: ConfigParams) => {
   if (!(protocol === 'http' || protocol === 'https')) {
     throw new Error(`invalid protocol: ${protocol}`)
   }
 
+  const standardHttpPort = protocol === 'http' ? port === 80 : port === 443
+
   const config = {
-    host: `${protocol}://${hostname}:${port}`,
+    origin: `${protocol}://${hostname}:${port}`,
     username,
     password,
-    hostHeader: hostname,
+    host: standardHttpPort ? hostname : `${hostname}:${port}`,
     agent: agent || getAgent(protocol, maxSockets),
     // Making sure it's a boolean, defaulting to false
     debug: debug === true,
   }
-
-  const nonStandardPort = protocol === 'http' ? port !== 80 : port !== 443
-
-  if (nonStandardPort) config.hostHeader += ':' + port
 
   return config
 }
