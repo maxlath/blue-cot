@@ -27,7 +27,7 @@
     "lib",
     "types"
   ],
-  "version": "9.1.5",
+  "version": "9.1.6",
   "main": "dist/lib/cot.js",
   "dependencies": {
     "node-fetch": "git+https://github.com/inventaire/node-fetch-patched#ffee0d0",
