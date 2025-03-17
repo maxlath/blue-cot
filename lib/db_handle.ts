@@ -20,14 +20,14 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
 
     info: async () => {
       const res = await jsonRequest<InfoResponse>('GET', `/${dbName}`)
-      return res.data
+      return res.parsedBody
     },
 
     get: async <D extends Document = Document> (docId: D['_id'], docRev?: D['_rev']) => {
       let url = db.docUrl(docId)
       if (typeof docRev === 'string') url += `?rev=${docRev}`
       const res = await jsonRequest<DocumentGetResponse & D>('GET', url)
-      if (res.statusCode === 200) return res.data
+      if (res.statusCode === 200) return res.parsedBody
       else throw buildErrorFromRes(res, `error getting doc ${docId}`)
     },
 
@@ -46,7 +46,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       validatePlainObject(doc, 'doc')
       const url = buildUrl(db.docUrl(doc._id), params)
       const res = await jsonRequest<DocumentInsertResponse>('PUT', url, doc)
-      if (res.statusCode === 200 || res.statusCode === 201 || (params.batch && res.statusCode === 202)) return res.data
+      if (res.statusCode === 200 || res.statusCode === 201 || (params.batch && res.statusCode === 202)) return res.parsedBody
       else throw buildErrorFromRes(res, `error putting doc ${doc._id}`)
     },
 
@@ -57,7 +57,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       const url = buildUrl(`/${dbName}`, params)
       const res = await jsonRequest<DocumentInsertResponse>('POST', url, doc)
       if (res.statusCode === 201 || (params.batch && res.statusCode === 202)) {
-        return res.data
+        return res.parsedBody
       } else if (isIdentifiedDocument(doc)) {
         throw buildErrorFromRes(res, `error posting doc ${doc._id}`)
       } else {
@@ -93,7 +93,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       validateString(rev, 'rev')
       const url = db.docUrl(docId) + '?rev=' + encodeURIComponent(rev)
       const res = await jsonRequest<DocumentDestroyResponse>('DELETE', url)
-      if (res.statusCode === 200) return res.data
+      if (res.statusCode === 200) return res.parsedBody
       else throw buildErrorFromRes(res, `error deleting doc ${docId}`)
     },
 
@@ -109,7 +109,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
 
         const url = db.docUrl(docId) + '?revs=true&open_revs=all'
         const res = await jsonRequest<DocumentGetResponse>('GET', url)
-        const data = res.data[0].ok
+        const data = res.parsedBody[0].ok
         const preDeleteRevNum = data._revisions.start - 1
         const preDeleteRevId = data._revisions.ids[1]
         const preDeleteRev = preDeleteRevNum + '-' + preDeleteRevId
@@ -137,13 +137,13 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       const res = await jsonRequest<DocumentBulkResponse[]>('POST', url, { docs })
       if (res.statusCode !== 201) throw buildErrorFromRes(res, 'error posting to _bulk_docs')
 
-      for (const part of res.data) {
+      for (const part of res.parsedBody) {
         if (part.error != null) {
           const statusCode = part.error === 'conflict' ? 409 : 400
-          throw newError('bulk response contains errors', statusCode, { body: res.data })
+          throw newError('bulk response contains errors', statusCode, { body: res.parsedBody })
         }
       }
-      return res.data
+      return res.parsedBody
     },
 
     buildQueryString: (query?: DocumentViewQuery) => buildSanitizedViewQueryString(query, viewQueryKeys),
@@ -152,7 +152,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       const qs = db.buildQueryString(query)
       const url = `/${dbName}/${path}?${qs}`
       const res = await jsonRequest<DocumentViewResponse<D, K, V>>('GET', url)
-      if (res.statusCode === 200) return res.data
+      if (res.statusCode === 200) return res.parsedBody
       else throw buildErrorFromRes(res, `error reading view ${path}`)
     },
 
@@ -173,7 +173,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       const qs = db.buildQueryString(query)
       const url = `/${dbName}/${path}?${qs}`
       const res = await jsonRequest<DocumentViewResponse<D, K, V>>('POST', url, { keys })
-      if (res.statusCode === 200) return res.data
+      if (res.statusCode === 200) return res.parsedBody
       else throw buildErrorFromRes(res, `error reading view ${path}`)
     },
 
@@ -211,7 +211,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
     listRevs: async <D extends Document = Document> (docId: D['_id']) => {
       const url = db.docUrl(docId) + '?revs_info=true'
       const res = await jsonRequest<DocumentGetResponse>('GET', url)
-      return res.data._revs_info as RevInfo[]
+      return res.parsedBody._revs_info as RevInfo[]
     },
 
     revertLastChange: async <D extends Document = Document> (docId: D['_id']) => {
@@ -234,7 +234,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       const path = `/${dbName}/_changes?${qs}`
 
       const res = await jsonRequest<DatabaseChangesResponse>('GET', path)
-      if (res.statusCode === 200) return res.data
+      if (res.statusCode === 200) return res.parsedBody
       else throw buildErrorFromRes(res, 'error reading _changes')
     },
 
@@ -244,11 +244,11 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       const path = `/${dbName}/${endpoint}`
       const res = await jsonRequest<MangoResponse<D>>('POST', path, query)
       if (res.statusCode === 200) {
-        const { warning } = res.data
+        const { warning } = res.parsedBody
         if (query.use_index != null && warning != null && warning.includes('No matching index found')) {
           throw newError('No matching index found', 400, { path, query, options, warning })
         } else {
-          return res.data
+          return res.parsedBody
         }
       } else {
         throw buildErrorFromRes(res, 'find error')
@@ -258,7 +258,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
     postIndex: async (indexDoc: CreateIndexRequest) => {
       validatePlainObject(indexDoc, 'index doc')
       const res = await jsonRequest<CreateIndexResponse>('POST', `/${dbName}/_index`, indexDoc)
-      if (res.statusCode === 200 || res.statusCode === 201) return res.data
+      if (res.statusCode === 200 || res.statusCode === 201) return res.parsedBody
       else throw buildErrorFromRes(res, 'postIndex error')
     },
 

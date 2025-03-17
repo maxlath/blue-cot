@@ -61,7 +61,7 @@ export interface FormattedError extends Error {
 
 export interface CouchdbResponse<ResponseBody> {
   statusCode: number
-  data: ResponseBody
+  parsedBody: ResponseBody
 }
 
 export type JsonRequest = <ResponseBody> (method: string, path: string, body?: object) => Promise<CouchdbResponse<ResponseBody>>
@@ -78,3 +78,9 @@ export interface DocumentViewWithDocsQuery extends Omit<DocumentViewQuery, 'incl
 }
 
 export type DocumentRevertResponse = (DocumentInsertResponse & { revert?: DocRev })
+
+export interface ErrorResponse {
+  ok: false
+  error: string
+  reason: string
+}

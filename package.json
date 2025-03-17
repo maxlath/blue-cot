@@ -30,7 +30,7 @@
   "version": "9.1.5",
   "main": "dist/lib/cot.js",
   "dependencies": {
-    "node-fetch": "^2.7.0",
+    "node-fetch": "git+https://github.com/inventaire/node-fetch-patched#ffee0d0",
     "typescript": "^5.6.2"
   },
   "engines": {
@@ -50,7 +50,6 @@
     "@swc/core": "^1.4.6",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.10.3",
-    "@types/node-fetch": "^2.6.12",
     "@typescript-eslint/eslint-plugin": "^8.13.0",
     "@typescript-eslint/parser": "^8.13.0",
     "@vercel/git-hooks": "^1.0.0",

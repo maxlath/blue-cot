@@ -53,6 +53,7 @@ async function tryRequest <ResponseBody> (url, params, config, attempt = 1) {
     // - ERR_STREAM_PREMATURE_CLOSE: thrown by node-fetch. It can happen when the maxSockets limit is reached.
     //   Seems to be more likely to happen during the body reception.
     //   See https://github.com/node-fetch/node-fetch/issues/1576#issuecomment-1694418865
+    // Should have been patched by https://github.com/inventaire/node-fetch-patched/commit/625fd38
     if (err.code === 'ERR_STREAM_PREMATURE_CLOSE' && attempt < 20) {
       // Generate a better stack trace that what node-fetch returns
       const err2 = newError('json request error', 500, { url, method: params.method, body: params.body })
@@ -68,7 +69,7 @@ async function tryRequest <ResponseBody> (url, params, config, attempt = 1) {
 }
 
 async function handleResponse <ResponseBody> (res, url: string, params, config: Config) {
-  res.data = await res.json() as ResponseBody
+  res.parsedBody = await res.json() as ResponseBody
   res.statusCode = res.status
 
   if (config.debug) logRequest(url, params, res)
@@ -85,7 +86,7 @@ async function handleResponse <ResponseBody> (res, url: string, params, config: 
 }
 
 function requestError (res, url, params) {
-  const { status, data: body } = res
+  const { status, parsedBody: body } = res
   const { error, reason } = body
   const err: FormattedError = new Error(`${error}: ${reason}`)
   const { method, attempt } = params

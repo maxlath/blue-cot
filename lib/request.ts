@@ -1,4 +1,4 @@
-import fetch from 'node-fetch'
+import fetch, { type RequestInfo, type RequestInit } from 'node-fetch'
 import { newError } from './errors.js'
 import { wait } from './utils.js'
 
@@ -9,12 +9,13 @@ const retryableErrors = [
   'ECONNRESET',
   // Thrown by node-fetch. It can happen when the maxSockets limit is reached.
   // See https://github.com/node-fetch/node-fetch/issues/1576#issuecomment-1694418865
+  // Should have been patched by https://github.com/inventaire/node-fetch-patched/commit/625fd38
   'ERR_STREAM_PREMATURE_CLOSE',
   'HPE_INVALID_CHUNK_SIZE',
   'EPIPE',
 ] as const
 
-export async function request (url: fetch.RequestInfo, fetchOptions: fetch.RequestInit, config, attempt = 1) {
+export async function request (url: URL | RequestInfo, fetchOptions: RequestInit, config, attempt = 1) {
   try {
     return await fetch(url, fetchOptions)
   } catch (err) {

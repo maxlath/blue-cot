@@ -1,5 +1,6 @@
 import { request } from './request.js'
 import type { Config } from './config_parser.js'
+import type { ErrorResponse } from 'types/types.js'
 
 let sessionCookieRequests = 0
 
@@ -22,7 +23,7 @@ export async function getSessionCookie (config: Config) {
   }, config)
 
   if (res.status >= 400) {
-    const { error, reason } = await res.json()
+    const { error, reason } = (await res.json()) as ErrorResponse
     if (error === 'unauthorized') throw new Error('unauthorized: invalid or missing credentials')
     else throw new Error(`${error}: ${reason}`)
   } else {
