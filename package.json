@@ -27,7 +27,7 @@
     "lib",
     "types"
   ],
-  "version": "9.1.6",
+  "version": "9.1.7",
   "main": "dist/lib/cot.js",
   "engines": {
     "node": ">= 16"
