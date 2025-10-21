@@ -7,6 +7,11 @@ export const catch404 = err => {
 export const shouldNotBeCalled = res => {
   const err = new Error('function was expected not to be called')
   err.name = 'shouldNotBeCalled'
+  // @ts-expect-error
   err.context = { res }
   throw err
+}
+
+export function assert (condition: boolean): asserts condition {
+  if (!condition) throw new Error('assertion failed')
 }

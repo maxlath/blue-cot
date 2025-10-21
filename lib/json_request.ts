@@ -6,9 +6,9 @@ import type { Config } from './config_parser.js'
 import type { FormattedError } from 'types/types.js'
 
 interface JsonRequestParams {
-  method: string,
-  headers: Record<string, string>,
-  agent: Config['agent'],
+  method: string
+  headers: Record<string, string>
+  agent: Config['agent']
   attempt: number
   start?: number
   body?: string
@@ -24,7 +24,7 @@ export function jsonRequestFactory (config: Config) {
     host: config.host,
   }
 
-  return async function jsonRequest<ResponseBody> (method, path, body) {
+  return async function jsonRequest<ResponseBody> (method: string, path: string, body?) {
     const url = `${origin}${path}`
     const params: JsonRequestParams = {
       method,

@@ -1,5 +1,5 @@
 import 'should'
-import cot from '../dist/lib/cot.js'
+import cot from '../lib/cot.js'
 
 describe('cot', () => {
   it('should return a db handler function when passed a db name', () => {

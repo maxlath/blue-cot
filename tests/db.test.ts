@@ -1,7 +1,21 @@
 import 'should'
+import { assert } from 'console'
 import config from 'config'
-import cot from '../dist/lib/cot.js'
+import cot from '../lib/cot.js'
 import { wait, catch404, shouldNotBeCalled } from './utils.js'
+import type { RevId } from 'types/nano.js'
+
+interface TestDoc {
+  _id: string
+  _rev: RevId
+  type: string
+  name: string
+  b?: number
+  hello?: number
+  foo?: number
+}
+
+type NewTestDoc = Omit<TestDoc, '_rev'>
 
 const randomUpdate = doc => {
   doc.foo = Math.random()
@@ -57,19 +71,21 @@ describe('DbHandle', () => {
     it('should return database info', async () => {
       const info = await db.info()
       info.should.be.an.Object()
+      assert('doc_count' in info)
       info.doc_count.should.equal(2)
     })
   })
 
   describe('#get', () => {
     it('should return test document from database', async () => {
-      const doc = await db.get('person-1')
+      const doc = await db.get<TestDoc>('person-1')
       doc.should.be.an.Object()
+      assert('name' in doc)
       doc.name.should.equal('Will Conant')
     })
 
     it('should return a 404 when a doc === missing', async () => {
-      await db.get('missing-doc-id')
+      await db.get<TestDoc>('missing-doc-id')
       .then(shouldNotBeCalled)
       .catch(err => {
         err.statusCode.should.equal(404)
@@ -77,19 +93,19 @@ describe('DbHandle', () => {
     })
 
     it('should return a specific version when passed a rev', async () => {
-      const firstVersion = await db.get('person-1')
-      await db.update('person-1', randomUpdate)
-      const specificVersion = await db.get('person-1', firstVersion._rev)
+      const firstVersion = await db.get<TestDoc>('person-1')
+      await db.update<TestDoc>('person-1', randomUpdate)
+      const specificVersion = await db.get<TestDoc>('person-1', firstVersion._rev)
       specificVersion.should.deepEqual(firstVersion)
     })
   })
 
   describe('#delete', () => {
     it('should delete a document', async () => {
-      const doc = await db.get('person-1')
+      const doc = await db.get<TestDoc>('person-1')
       await db.delete('person-1', doc._rev)
       try {
-        await db.get('person-1').then(shouldNotBeCalled)
+        await db.get<TestDoc>('person-1').then(shouldNotBeCalled)
       } catch (err) {
         err.statusCode.should.equal(404)
       }
@@ -109,10 +125,10 @@ describe('DbHandle', () => {
     it('should undelete a document', async () => {
       db.undelete.should.be.a.Function()
       const docId = 'person-1'
-      const originalDoc = await db.get(docId)
+      const originalDoc = await db.get<TestDoc>(docId)
       await db.delete(docId, originalDoc._rev)
       await db.undelete(docId)
-      const restoredDoc = await db.get(docId)
+      const restoredDoc = await db.get<TestDoc>(docId)
       delete originalDoc._rev
       delete restoredDoc._rev
       originalDoc.should.deepEqual(restoredDoc)
@@ -121,7 +137,7 @@ describe('DbHandle', () => {
     it('should throw when asked to delete a non deleted document', async () => {
       const docId = 'person-1'
       // updating so that there is more than one rev
-      await db.update(docId, randomUpdate)
+      await db.update<TestDoc>(docId, randomUpdate)
       try {
         await db.undelete(docId).then(shouldNotBeCalled)
       } catch (err) {
@@ -132,12 +148,12 @@ describe('DbHandle', () => {
     it('should be able to undelete several times the same doc', async () => {
       db.undelete.should.be.a.Function()
       const docId = 'person-1'
-      const originalDoc = await db.get(docId)
+      const originalDoc = await db.get<TestDoc>(docId)
       // First delete
       await db.delete(docId, originalDoc._rev)
       // First undelete
       await db.undelete(docId)
-      const restoredDoc = await db.get(docId)
+      const restoredDoc = await db.get<TestDoc>(docId)
       const currentRev = restoredDoc._rev
       delete originalDoc._rev
       delete restoredDoc._rev
@@ -146,7 +162,7 @@ describe('DbHandle', () => {
       await db.delete(docId, currentRev)
       // Second undelete
       await db.undelete(docId)
-      const rerestoredDoc = await db.get(docId)
+      const rerestoredDoc = await db.get<TestDoc>(docId)
       delete originalDoc._rev
       delete rerestoredDoc._rev
       originalDoc.should.deepEqual(rerestoredDoc)
@@ -192,7 +208,7 @@ describe('DbHandle', () => {
       const res = await db.post(doc)
       await db.post(doc, { batch: 'ok' })
       await wait(10)
-      const res3 = await db.get(doc._id)
+      const res3 = await db.get<TestDoc>(doc._id)
       res3._rev.should.equal(res.rev)
     })
   })
@@ -218,16 +234,17 @@ describe('DbHandle', () => {
 
   describe('#update', () => {
     it('should apply the passed to the doc', async () => {
-      await db.update('person-1', doc => {
+      await db.update<TestDoc>('person-1', doc => {
         doc.b = 2
         return doc
       })
-      const doc = await db.get('person-1')
+      const doc = await db.get<TestDoc>('person-1')
+      assert('b' in doc)
       doc.b.should.equal(2)
     })
 
     it('should not create the doc if missing by default', async () => {
-      await db.update('does-not-exist', doc => {
+      await db.update<TestDoc>('does-not-exist', doc => {
         doc.hello = 123
         return doc
       })
@@ -238,18 +255,18 @@ describe('DbHandle', () => {
     })
 
     it('should create the doc if missing, if requested', async () => {
-      await db.update('does-still-not-exist', doc => {
+      await db.update<TestDoc>('does-still-not-exist', doc => {
         doc.hello = 456
         return doc
       }, { createIfMissing: true })
-      const doc = await db.get('does-still-not-exist')
+      const doc = await db.get<TestDoc>('does-still-not-exist')
       doc.hello.should.equal(456)
     })
   })
 
   describe('#bulk', () => {
     it('should post all the passed docs', async () => {
-      const res = await db.bulk([
+      const res = await db.bulk<NewTestDoc>([
         { _id: 'person-2', type: 'person', name: 'Bobby Lapointe' },
         { _id: 'person-3', type: 'person', name: 'Jean Valjean' },
         { _id: 'person-4', type: 'person', name: 'Rose Tyler' },
@@ -263,7 +280,7 @@ describe('DbHandle', () => {
 
     it('should reject bulks with invalid documents', async () => {
       try {
-        await db.bulk([
+        await db.bulk<NewTestDoc>([
           { _id: 'bla', type: 'person', name: 'Jolyn' },
           null,
         ])
@@ -276,12 +293,13 @@ describe('DbHandle', () => {
     })
 
     it('should reject bulks with errors', async () => {
-      const doc = { _id: 'blu', type: 'person', name: 'Jolyn' }
-      const res = await db.bulk([ doc ])
+      const doc = { _id: 'blu', type: 'person', name: 'Jolyn' } as TestDoc
+      const res = await db.bulk<NewTestDoc>([ doc ])
+      // @ts-expect-error
       doc._rev = res[0].rev
-      await db.bulk([ doc ])
+      await db.bulk<NewTestDoc>([ doc ])
       try {
-        await db.bulk([ doc ]).then(shouldNotBeCalled)
+        await db.bulk<NewTestDoc>([ doc ]).then(shouldNotBeCalled)
       } catch (err) {
         err.statusCode.should.equal(409)
         err.context.body.should.deepEqual([
@@ -293,7 +311,7 @@ describe('DbHandle', () => {
 
   describe('#fetch', () => {
     it('should return all the docs requested', async () => {
-      await db.bulk([
+      await db.bulk<NewTestDoc>([
         { _id: 'person-2', type: 'person', name: 'Bobby Lapointe' },
         { _id: 'person-3', type: 'person', name: 'Jean Valjean' },
         { _id: 'person-4', type: 'person', name: 'Rose Tyler' },
@@ -307,7 +325,7 @@ describe('DbHandle', () => {
     })
 
     it('should report missing docs as errors', async () => {
-      await db.bulk([
+      await db.bulk<NewTestDoc>([
         { _id: 'person-10', type: 'person', name: 'Bobby Lapointe' },
       ])
       const { docs, errors } = await db.fetch([ 'person-10', 'person-unknown' ])
@@ -332,8 +350,8 @@ describe('DbHandle', () => {
   describe('#list-revs', () => {
     it('should return all the doc revs', async () => {
       db.listRevs.should.be.a.Function()
-      await db.update('person-1', randomUpdate)
-      await db.update('person-1', randomUpdate)
+      await db.update<TestDoc>('person-1', randomUpdate)
+      await db.update<TestDoc>('person-1', randomUpdate)
       const res = await db.listRevs('person-1')
       res.should.be.an.Array()
       res[0].rev.split('-')[0].should.equal('3')
@@ -344,11 +362,11 @@ describe('DbHandle', () => {
   describe('#revertLastChange', () => {
     it('should revert to the previous version', async () => {
       db.revertLastChange.should.be.a.Function()
-      const getCurrentDoc = () => db.get('person-1')
+      const getCurrentDoc = () => db.get<TestDoc>('person-1')
 
-      await db.update('person-1', randomUpdate)
+      await db.update<TestDoc>('person-1', randomUpdate)
       const previousVersion = await getCurrentDoc()
-      await db.update('person-1', randomUpdate)
+      await db.update<TestDoc>('person-1', randomUpdate)
       const lastVersion = await getCurrentDoc()
       lastVersion._rev.should.not.equal(previousVersion._rev)
       lastVersion.foo.should.not.equal(previousVersion.foo)
@@ -391,18 +409,18 @@ describe('DbHandle', () => {
     it('should revert to the last matching version', async () => {
       db.revertToLastVersionWhere.should.be.a.Function()
 
-      await db.update('person-1', randomUpdate)
-      const res = await db.update('person-1', doc => {
+      await db.update<TestDoc>('person-1', randomUpdate)
+      const res = await db.update<TestDoc>('person-1', doc => {
         doc.foo = 2
         return doc
       })
       const targetRev = res.rev
-      await db.update('person-1', randomUpdate)
-      await db.update('person-1', randomUpdate)
-      await db.update('person-1', randomUpdate)
-      const res2 = await db.revertToLastVersionWhere('person-1', doc => doc.foo === 2)
+      await db.update<TestDoc>('person-1', randomUpdate)
+      await db.update<TestDoc>('person-1', randomUpdate)
+      await db.update<TestDoc>('person-1', randomUpdate)
+      const res2 = await db.revertToLastVersionWhere<TestDoc>('person-1', doc => doc.foo === 2)
       res2.revert.should.equal(targetRev)
-      const doc = await db.get('person-1')
+      const doc = await db.get<TestDoc>('person-1')
       doc.foo.should.equal(2)
     })
   })

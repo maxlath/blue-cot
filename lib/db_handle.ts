@@ -2,7 +2,7 @@ import querystring from 'node:querystring'
 import { buildErrorFromRes, newError } from './errors.js'
 import { changesQueryKeys, viewQueryKeys } from './query_keys.js'
 import { isPlainObject, validateString, validateArray, validatePlainObject, isIdentifiedDocument } from './utils.js'
-import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, Document, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertParams, DocumentInsertResponse, DocumentLookupFailure, DocumentViewQuery, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse, RevId } from '../types/nano.js'
+import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, DatabaseGetResponse, Document, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertParams, DocumentInsertResponse, DocumentLookupFailure, DocumentViewQuery, DocumentViewResponse, IdentifiedDocument, MangoResponse, RevId } from '../types/nano.js'
 import type { DocTranformer, FetchOptions, FindOptions, FindQuery, JsonRequest, NewDoc, TestFunction, RecoveredDoc, UpdateOptions, ViewKey, DocumentDeletedFailure, RevInfo, DocumentRevertResponse, DocumentViewKeysQuery, ViewValue } from 'types/types.js'
 
 export default function (jsonRequest: JsonRequest, dbName: string) {
@@ -19,7 +19,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
     },
 
     info: async () => {
-      const res = await jsonRequest<InfoResponse>('GET', `/${dbName}`)
+      const res = await jsonRequest<DatabaseGetResponse>('GET', `/${dbName}`)
       return res.parsedBody
     },
 
@@ -187,13 +187,13 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
     },
 
     // http://docs.couchdb.org/en/latest/db/database/bulk-db.html#post--db-_all_docs
-    allDocsKeys: async (keys: ViewKey[], query: DocumentViewKeysQuery) => {
+    allDocsKeys: async (keys: ViewKey[], query?: DocumentViewKeysQuery) => {
       return db.viewKeysQuery('_all_docs', keys, query)
     },
 
     fetch: async <D extends Document> (keys: ViewKey[], options?: FetchOptions) => {
       validateArray(keys, 'keys')
-      const throwOnErrors = options != null && options.throwOnErrors === true
+      const throwOnErrors = options?.throwOnErrors === true
       const res = await db.allDocsKeys(keys, { include_docs: true })
       const rows = res.rows as DocumentFetchResponse<D>['rows']
       const docs: D[] = []
@@ -202,7 +202,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
         if (isDocumentLookupFailure(row)) errors.push(row)
         // @ts-expect-error Property 'deleted' does not exist on type '{ rev: string; }'.ts(2339)
         else if (row.value.deleted) errors.push({ key: row.key, error: 'deleted' })
-        else docs.push(row.doc as D)
+        else docs.push(row.doc)
       }
       if (throwOnErrors && errors.length > 0) throw newError('docs fetch errors', 400, { keys, errors })
       return { docs, errors }
@@ -245,7 +245,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
       const res = await jsonRequest<MangoResponse<D>>('POST', path, query)
       if (res.statusCode === 200) {
         const { warning } = res.parsedBody
-        if (query.use_index != null && warning != null && warning.includes('No matching index found')) {
+        if (query.use_index != null && warning?.includes('No matching index found')) {
           throw newError('No matching index found', 400, { path, query, options, warning })
         } else {
           return res.parsedBody

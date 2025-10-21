@@ -1,6 +1,6 @@
 import 'should'
 import config from 'config'
-import cot from '../dist/lib/cot.js'
+import cot from '../lib/cot.js'
 import { getArrayOfLength, resetTestDb } from './test_db.js'
 
 describe('request agent', () => {

@@ -590,9 +590,7 @@ export interface View<D extends Document> {
 }
 
 export interface ViewDocument<D extends Document> extends IdentifiedDocument {
-  views: {
-    [name: string]: View<D>
-  }
+  views: Record<string, View<D>>
 }
 
 // -------------------------------------
@@ -856,7 +854,7 @@ export interface DatabaseChangesParams {
  * @see Docs: {@link http://docs.couchdb.org/en/latest/api/database/changes.html#get--db-_changes} */
 export interface DatabaseChangesResultItem {
   /** List of document’s leaves with single field rev. */
-  changes: Array<{ rev: RevId }>
+  changes: { rev: RevId }[]
 
   /** Document ID. */
   id: string
@@ -1201,7 +1199,7 @@ export interface DocumentListResponse<D extends Document> {
   /** Array of view row objects.
    *
    * By default the information returned contains only the document ID and revision. */
-  rows: Array<DocumentResponseRow<D>>
+  rows: DocumentResponseRow<D>[]
 
   /** Number of documents in the database/view.
    *
@@ -1241,7 +1239,7 @@ export interface DocumentLookupFailure {
  * @see Docs: {@link https://docs.couchdb.org/en/latest/api/database/bulk-api.html#post--db-_all_docs} */
 export interface DocumentFetchResponse<D extends Document> {
   offset: number
-  rows: Array<DocumentResponseRow<D> | DocumentLookupFailure>
+  rows: (DocumentResponseRow<D> | DocumentLookupFailure)[]
   total_rows: number
   update_seq?: number | string
 }
@@ -1250,7 +1248,7 @@ export interface DocumentFetchResponse<D extends Document> {
  * @see Docs: {@link https://docs.couchdb.org/en/latest/api/database/bulk-api.html#post--db-_all_docs} */
 export interface DocumentFetchRevsResponse<D extends Document> {
   offset: number
-  rows: Array<DocumentResponseRow<D> | DocumentLookupFailure>
+  rows: (DocumentResponseRow<D> | DocumentLookupFailure)[]
   total_rows: number
   update_seq?: number | string
 }
@@ -1260,13 +1258,13 @@ export interface DocumentFetchRevsResponse<D extends Document> {
 export interface DocumentSearchResponse<V> {
 
   /**  Array of search results */
-  rows: Array<{
+  rows: {
     id: string
     order: number[]
     fields: object
     key: string
     doc?: V
-  }>
+  }[]
 
   /** Number of documents in the search resykts */
   total_rows: number
@@ -1528,12 +1526,12 @@ export interface DocumentViewResponse<D extends Document = Document, K extends V
   /** Array of view row objects.
    *
    * By default the information returned contains only the document ID and revision. */
-  rows: Array<{
+  rows: {
     id: D['_id']
     key: K
     value: V
     doc?: D
-  }>
+  }[]
 
   /** Number of documents in the database/view. */
   total_rows: number
@@ -1543,10 +1541,10 @@ export interface DocumentViewResponse<D extends Document = Document, K extends V
 }
 
 type MangoValue = number | string | Date | boolean | object | null
-type MangoOperator = '$lt' | '$lte' | '$eq' | '$ne' | '$gte' | '$gt' |
-  '$exists' | '$type' |
-  '$in' | '$nin' | '$size' | '$mod' | '$regex' |
-  '$or' | '$and' | '$nor' | '$not' | '$all' | '$allMatch' | '$elemMatch'
+type MangoOperator = '$lt' | '$lte' | '$eq' | '$ne' | '$gte' | '$gt'
+  | '$exists' | '$type'
+  | '$in' | '$nin' | '$size' | '$mod' | '$regex'
+  | '$or' | '$and' | '$nor' | '$not' | '$all' | '$allMatch' | '$elemMatch'
 /** Mango selector syntax.
  * @see Docs: {@link http://docs.couchdb.org/en/latest/api/database/find.html#selector-syntax} */
 type MangoSelector = {
@@ -1555,7 +1553,7 @@ type MangoSelector = {
 
 /** Mango sort syntax
  * @see Docs: {@link http://docs.couchdb.org/en/latest/api/database/find.html#sort-syntax} */
-type SortOrder = string | string[] | { [key: string]: 'asc' | 'desc' }
+type SortOrder = string | string[] | Record<string, 'asc' | 'desc'>
 
 /** Mango query syntax.
  * @see Docs: {@link https://docs.couchdb.org/en/latest/api/database/find.html#db-find}  */
@@ -1655,6 +1653,13 @@ export interface MangoResponse<D extends Document> {
 
   /** Basic execution statistics for a specific request. */
   execution_stats?: MangoExecutionStats
+
+  // TODO: check the following attributes types, currently inferred from pre-existing tests
+  dbname: string
+  index: object
+  opts: object
+  mrargs: object
+  fields: string[]
 }
 
 /** Mango create index parameters.
@@ -1663,22 +1668,22 @@ export interface CreateIndexRequest {
   /** JSON object describing the index to create */
   index: {
     /** Array of field names following the sort syntax. */
-    fields: SortOrder[],
+    fields: SortOrder[]
 
     /** A selector to apply to documents at indexing time, creating a partial index. */
     partial_filter_selector?: MangoSelector
-  },
+  }
 
   /** Name of the design document in which the index will be created. */
   ddoc?: string
 
   /** Name of the index. If no name is provided, a name will be generated automatically. */
-  name?: string,
+  name?: string
 
   /** Can be "json" or "text".
    *
    * @default "json" */
-  type?: 'json' | 'text',
+  type?: 'json' | 'text'
 
   /** This field sets whether the created index will be a partitioned or global index. */
   partitioned?: boolean
@@ -1690,10 +1695,10 @@ export interface CreateIndexResponse {
   /** Flag to show whether the index was created or one already exists.
    *
    * Can be “created” or “exists”. */
-  result: string,
+  result: string
 
   /** Id of the design document the index was created in. */
-  id: string,
+  id: string
 
   /** Name of the index created. */
   name: string

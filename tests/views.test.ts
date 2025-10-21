@@ -1,6 +1,6 @@
 import config from 'config'
 import should from 'should'
-import cot from '../dist/lib/cot.js'
+import cot from '../lib/cot.js'
 import { getArrayOfLength } from './test_db.js'
 import { shouldNotBeCalled, catch404 } from './utils.js'
 
@@ -9,6 +9,7 @@ describe('Validations', () => {
 
   describe('#getDocsByViewQuery', () => {
     it('should reject a call without a view name', async () => {
+      // @ts-expect-error
       await db.getDocsByViewQuery()
       .then(shouldNotBeCalled)
       .catch(err => {
@@ -17,6 +18,7 @@ describe('Validations', () => {
     })
 
     it('should reject a call without query object', async () => {
+      // @ts-expect-error
       await db.getDocsByViewQuery('byKey')
       .then(shouldNotBeCalled)
       .catch(err => {
@@ -27,6 +29,7 @@ describe('Validations', () => {
 
   describe('#getDocsByViewKeysAndCustomQuery', () => {
     it('should reject a call without a view name', async () => {
+      // @ts-expect-error
       await db.getDocsByViewKeysAndCustomQuery()
       .then(shouldNotBeCalled)
       .catch(err => {
@@ -35,6 +38,7 @@ describe('Validations', () => {
     })
 
     it('should reject a call without a keys array', async () => {
+      // @ts-expect-error
       await db.getDocsByViewKeysAndCustomQuery('byKey')
       .then(shouldNotBeCalled)
       .catch(err => {
@@ -43,6 +47,7 @@ describe('Validations', () => {
     })
 
     it('should reject a call without query object', async () => {
+      // @ts-expect-error
       await db.getDocsByViewKeysAndCustomQuery('byKey', [ 'foo' ])
       .then(shouldNotBeCalled)
       .catch(err => {
@@ -53,6 +58,7 @@ describe('Validations', () => {
 
   describe('#getDocsByViewKey', () => {
     it('should reject a call without a view name', async () => {
+      // @ts-expect-error
       await db.getDocsByViewKey()
       .then(shouldNotBeCalled)
       .catch(err => {
@@ -61,6 +67,7 @@ describe('Validations', () => {
     })
 
     it('should reject a call without a key', async () => {
+      // @ts-expect-error
       await db.getDocsByViewKey('byKey')
       .then(shouldNotBeCalled)
       .catch(err => {
@@ -71,6 +78,7 @@ describe('Validations', () => {
 
   describe('#findDocByViewKey', () => {
     it('should reject a call without a view name', async () => {
+      // @ts-expect-error
       await db.findDocByViewKey()
       .then(shouldNotBeCalled)
       .catch(err => {
@@ -79,6 +87,7 @@ describe('Validations', () => {
     })
 
     it('should reject a call without a key', async () => {
+      // @ts-expect-error
       await db.findDocByViewKey('byKey')
       .then(shouldNotBeCalled)
       .catch(err => {
@@ -89,6 +98,7 @@ describe('Validations', () => {
 
   describe('#getDocsByViewKeys', () => {
     it('should reject a call without a view name', async () => {
+      // @ts-expect-error
       await db.getDocsByViewKeys()
       .then(shouldNotBeCalled)
       .catch(err => {
@@ -97,6 +107,7 @@ describe('Validations', () => {
     })
 
     it('should reject a call without keys array', async () => {
+      // @ts-expect-error
       await db.getDocsByViewKeys('byKey')
       .then(shouldNotBeCalled)
       .catch(err => {
@@ -132,6 +143,7 @@ describe('Views', () => {
       },
     }
 
+    // @ts-expect-error
     batch.push(designDoc)
     await db.bulk(batch)
   })

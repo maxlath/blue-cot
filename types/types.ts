@@ -16,7 +16,7 @@ export interface RecoveredDoc {
   _rev?: DocRev
 }
 
-export type DocTranformer <D extends Document = Document> = (doc: D) => D
+export type DocTranformer<D extends Document = Document> = (doc: D) => D
 
 export interface UpdateOptions {
   createIfMissing?: boolean
@@ -25,7 +25,9 @@ export interface UpdateOptions {
 export type jsonKey = string
 
 export interface FindQuery {
-  use_index?: string
+  use_index?: string | string[]
+  selector?: Record<string, unknown>
+  execution_stats?: boolean
 }
 
 export interface FindOptions {
@@ -34,18 +36,16 @@ export interface FindOptions {
 
 export type MixedKeyElement = string | number | object
 
-export type ViewKey = string | number | MixedKeyElement[] | { [key: string]: MixedKeyElement }
+export type ViewKey = string | number | MixedKeyElement[] | Record<string, MixedKeyElement>
 export type ViewValue = unknown
 
 export interface FetchOptions {
   throwOnErrors?: boolean
 }
 
-export type TestFunction <D extends Document = Document> = (doc: D) => boolean
+export type TestFunction<D extends Document = Document> = (doc: D) => boolean
 
-export interface API {
-  [key: string]: any
-}
+export type API = Record<string, unknown>
 
 export interface RevInfo {
   rev: DocRev
