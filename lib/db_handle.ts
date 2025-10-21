@@ -2,7 +2,7 @@ import querystring from 'node:querystring'
 import { buildErrorFromRes, newError } from './errors.js'
 import { changesQueryKeys, viewQueryKeys } from './query_keys.js'
 import { isPlainObject, validateString, validateArray, validatePlainObject, isIdentifiedDocument } from './utils.js'
-import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, Document, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertParams, DocumentInsertResponse, DocumentLookupFailure, DocumentViewQuery, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse } from '../types/nano.js'
+import type { CreateIndexRequest, CreateIndexResponse, DatabaseChangesParams, DatabaseChangesResponse, Document, DocumentBulkResponse, DocumentDestroyResponse, DocumentFetchResponse, DocumentGetResponse, DocumentInsertParams, DocumentInsertResponse, DocumentLookupFailure, DocumentViewQuery, DocumentViewResponse, IdentifiedDocument, InfoResponse, MangoResponse, RevId } from '../types/nano.js'
 import type { DocTranformer, FetchOptions, FindOptions, FindQuery, JsonRequest, NewDoc, TestFunction, RecoveredDoc, UpdateOptions, ViewKey, DocumentDeletedFailure, RevInfo, DocumentRevertResponse, DocumentViewKeysQuery, ViewValue } from 'types/types.js'
 
 export default function (jsonRequest: JsonRequest, dbName: string) {
@@ -112,7 +112,7 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
         const data = res.parsedBody[0].ok
         const preDeleteRevNum = data._revisions.start - 1
         const preDeleteRevId = data._revisions.ids[1]
-        const preDeleteRev = preDeleteRevNum + '-' + preDeleteRevId
+        const preDeleteRev = (preDeleteRevNum + '-' + preDeleteRevId) as RevId
         const preDeleteDoc: RecoveredDoc = await db.get(docId, preDeleteRev)
         delete preDeleteDoc._rev
         return db.put(preDeleteDoc)
@@ -273,12 +273,12 @@ export default function (jsonRequest: JsonRequest, dbName: string) {
         throw newError('previous version isnt available', 400, { docId, candidatesRevsInfo, currentRevInfo })
       }
 
-      const targetVersion = await db.get(docId, previousRevInfo.rev)
+      const targetVersion = await db.get(docId, previousRevInfo.rev as RevId)
       if (typeof testFn === 'function' && !testFn(targetVersion)) {
         return db.recover(docId, candidatesRevsInfo, currentRevInfo, testFn)
       }
       const revertRev = targetVersion._rev
-      targetVersion._rev = currentRevInfo.rev
+      targetVersion._rev = currentRevInfo.rev as RevId
       const res: DocumentRevertResponse = await db.put(targetVersion)
       res.revert = revertRev
       return res

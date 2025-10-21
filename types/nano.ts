@@ -12,6 +12,8 @@ export interface UUIDObject {
   uuids: string[]
 }
 
+export type RevId = `${number}-${string}`
+
 /**
  * Response to CouchDB root API call - cluster information.
  * @see Docs: {@link https://docs.couchdb.org/en/stable/api/server/common.html#api-server-root} */
@@ -566,7 +568,7 @@ export interface MaybeRevisionedDocument {
 }
 
 export interface RevisionedDocument {
-  _rev: string
+  _rev: RevId
 }
 
 export interface MaybeDocument extends MaybeIdentifiedDocument, MaybeRevisionedDocument {
@@ -854,7 +856,7 @@ export interface DatabaseChangesParams {
  * @see Docs: {@link http://docs.couchdb.org/en/latest/api/database/changes.html#get--db-_changes} */
 export interface DatabaseChangesResultItem {
   /** List of document’s leaves with single field rev. */
-  changes: Array<{ rev: string }>
+  changes: Array<{ rev: RevId }>
 
   /** Document ID. */
   id: string
@@ -939,7 +941,7 @@ export interface DocumentResponseRowMeta {
   id: string
   key: string
   value: {
-    rev: string
+    rev: RevId
   }
   error?: string
 }
@@ -998,7 +1000,7 @@ export interface DocumentInsertResponse {
   ok: boolean
 
   /** Revision MVCC token */
-  rev: string
+  rev: RevId
 }
 
 /** Document delete response.
@@ -1011,7 +1013,7 @@ export interface DocumentDestroyResponse {
   ok: boolean
 
   /** Revision MVCC token */
-  rev: string
+  rev: RevId
 }
 
 /** Document get parameters.
@@ -1081,7 +1083,7 @@ export interface DocumentGetResponse {
   _id: string
 
   /** Revision MVCC token. */
-  _rev: string
+  _rev: RevId
 
   /** Deletion flag. Available if document was removed. */
   _deleted?: boolean
