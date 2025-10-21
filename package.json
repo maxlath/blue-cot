@@ -29,10 +29,6 @@
   ],
   "version": "9.1.6",
   "main": "dist/lib/cot.js",
-  "dependencies": {
-    "node-fetch": "git+https://github.com/inventaire/node-fetch-patched#ffee0d0",
-    "typescript": "^5.6.2"
-  },
   "engines": {
     "node": ">= 16"
   },
@@ -45,24 +41,26 @@
     "url": "http://github.com/maxlath/blue-cot"
   },
   "forkedFrom": "http://github.com/willconant/cot-node",
+  "dependencies": {
+    "node-fetch": "git+https://github.com/inventaire/node-fetch-patched#ffee0d0",
+    "typescript": "^5.9.3"
+  },
   "devDependencies": {
-    "@stylistic/eslint-plugin-ts": "^2.10.0",
+    "@eslint/config-helpers": "^0.3.0",
+    "@eslint/js": "^9.32.0",
+    "@stylistic/eslint-plugin": "^5.5.0",
     "@swc/core": "^1.4.6",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.10.3",
-    "@typescript-eslint/eslint-plugin": "^8.13.0",
-    "@typescript-eslint/parser": "^8.13.0",
     "@vercel/git-hooks": "^1.0.0",
     "config": "^3.2.4",
-    "eslint": "^8.57.1",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-n": "^16.6.2",
-    "eslint-plugin-node-import": "^1.0.4",
-    "eslint-plugin-promise": "^6.1.1",
+    "eslint": "^9.38.0",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import-x": "^4.16.1",
     "mocha": "^10.2.0",
     "should": "^13.2.3",
-    "ts-node": "^10.9.2"
+    "tsx": "^4.20.6",
+    "typescript-eslint": "^8.46.2"
   },
   "standard": {
     "globals": [
