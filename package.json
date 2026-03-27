@@ -38,7 +38,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "http://github.com/maxlath/blue-cot"
+    "url": "https://codeberg.org/maxlath/blue-cot"
   },
   "forkedFrom": "http://github.com/willconant/cot-node",
   "dependencies": {
