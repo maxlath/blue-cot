@@ -61,7 +61,7 @@ Especially compared to [Cot](https://github.com/willconant/cot-node) from which 
 * Class-less, thus a different initialization, but the rest of the API stays the same
 * Consequently, `blue-cot` is `this`-free: no need to bind functions contexts!
 * `4xx` and `5xx` responses will return rejected promises (should be handled with `.catch`)
-* Adds [a few new functions](#specific-api), notably [some view functions goodies](https://github.com/inventaire/blue-cot/blob/master/lib/view_functions.js)
+* Adds [a few new functions](#specific-api), notably [some view functions goodies](https://github.com/inventaire/blue-cot/src/branch/main/lib/view_functions.js)
 * Uses [Cookie Authentication](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#cookie-authentication) instead of [Basic Auth](http://docs.couchdb.org/en/2.1.0/api/server/authn.html#basic-authentication) for better performance
 * Uses a single persistent connexion to CouchDB by default
 * Types
@@ -114,7 +114,7 @@ const db = getDbApi('some-db-name')
 ## API
 ### Database functions
 
-To handle database and design documents creation, see [couch-init2](https://github.com/maxlath/couch-init2)
+To handle database and design documents creation, see [couch-init2](https://codeberg.org/maxlath/couch-init2)
 
 #### info
 `GET /<dbName>`
@@ -373,7 +373,7 @@ const db = getDbApi('some-db-name', 'some-design-doc-name')
 ##### findDocByViewKey
 ##### getDocsByViewKeys
 
-see [lib/view_functions](https://github.com/maxlath/blue-cot/blob/master/lib/view_functions.js)
+see [lib/view_functions](https://codeberg.org/maxlath/blue-cot/src/branch/main/lib/view_functions.js)
 
 If you find this module useful, consider making a PR to improve the documentation
 
