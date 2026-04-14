@@ -30,7 +30,6 @@ export default function (db: ReturnType<typeof dbHandle>, designDocName: DesignD
       return viewFunctions.getDocsByViewQuery<D>(viewName, {
         key,
         include_docs: true,
-        reduce: false,
       })
     },
 
@@ -41,7 +40,6 @@ export default function (db: ReturnType<typeof dbHandle>, designDocName: DesignD
         key,
         include_docs: true,
         limit: 1,
-        reduce: false,
       })
       const doc = firstDoc<D>(res)
       if (doc) {
@@ -54,7 +52,7 @@ export default function (db: ReturnType<typeof dbHandle>, designDocName: DesignD
     async getDocsByViewKeys <D extends Document> (viewName: ViewName, keys: ViewKey[]) {
       validateString(viewName, 'view name')
       validateArray(keys, 'keys')
-      return viewFunctions.getDocsByViewKeysAndCustomQuery<D>(viewName, keys, { include_docs: true, reduce: false })
+      return viewFunctions.getDocsByViewKeysAndCustomQuery<D>(viewName, keys, { include_docs: true })
     },
   }
 
